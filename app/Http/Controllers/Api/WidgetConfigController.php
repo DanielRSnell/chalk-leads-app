@@ -21,4 +21,14 @@ class WidgetConfigController extends Controller
 
         return response()->json($widget->getConfigurationArray());
     }
+
+    public function showForUser(Widget $widget): JsonResponse
+    {
+        // Ensure user owns the widget
+        if ($widget->company_id !== auth()->user()->company_id) {
+            return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        return response()->json($widget->getConfigurationArray());
+    }
 }

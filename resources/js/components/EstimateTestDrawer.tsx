@@ -13,9 +13,37 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFo
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Calendar as CalendarComponent } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { parseDate } from 'chrono-node';
+// Removed chrono-node import - using browser-compatible date parsing
 import { MapboxAutofill } from '@/components/ui/MapboxAutofill';
 import { RouteCalculation } from '@/components/ui/RouteCalculation';
+
+// Simple natural language date parser for common phrases
+const parseNaturalDate = (input: string): Date | null => {
+    const trimmed = input.toLowerCase().trim();
+    const today = new Date();
+    
+    // Handle common natural language phrases
+    switch (trimmed) {
+        case 'today':
+            return today;
+        case 'tomorrow':
+            const tomorrow = new Date(today);
+            tomorrow.setDate(today.getDate() + 1);
+            return tomorrow;
+        case 'yesterday':
+            const yesterday = new Date(today);
+            yesterday.setDate(today.getDate() - 1);
+            return yesterday;
+        case 'next week':
+            const nextWeek = new Date(today);
+            nextWeek.setDate(today.getDate() + 7);
+            return nextWeek;
+        default:
+            // Try to parse as a regular date
+            const parsed = new Date(input);
+            return isNaN(parsed.getTime()) ? null : parsed;
+    }
+};
 
 interface EstimateTestDrawerProps {
     isOpen: boolean;
@@ -91,7 +119,7 @@ function CalendarInput({ stepId, currentResponse, onResponse }: {
     const [inputValue, setInputValue] = useState(currentResponse?.inputValue || "Tomorrow");
     const [selectedDate, setSelectedDate] = useState<Date | undefined>(
         currentResponse?.selectedDate ? new Date(currentResponse.selectedDate) : 
-        parseDate(inputValue) || undefined
+        parseNaturalDate(inputValue) || undefined
     );
     const [month, setMonth] = useState<Date | undefined>(selectedDate || new Date());
 
@@ -106,7 +134,7 @@ function CalendarInput({ stepId, currentResponse, onResponse }: {
 
     const handleInputChange = (value: string) => {
         setInputValue(value);
-        const parsedDate = parseDate(value);
+        const parsedDate = parseNaturalDate(value);
         if (parsedDate) {
             setSelectedDate(parsedDate);
             setMonth(parsedDate);

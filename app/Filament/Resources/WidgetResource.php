@@ -20,7 +20,8 @@ class WidgetResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
-    protected static ?string $navigationGroup = 'Widget Management';
+    protected static ?string $navigationGroup = 'Tenant Management';
+    protected static ?int $navigationSort = 3;
 
     public static function form(Form $form): Form
     {
@@ -690,8 +691,22 @@ class WidgetResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()
-            ->where('company_id', Filament::getTenant()->id);
+        $query = parent::getEloquentQuery();
+        $user = auth()->user();
+        
+        // System admins can see all widgets, regular admins see only their company's widgets
+        if ($user && !$user->isSystemAdmin()) {
+            $query->where('company_id', $user->company_id);
+        }
+        
+        return $query;
+    }
+    
+    public static function canCreate(): bool
+    {
+        $user = auth()->user();
+        // Only regular admins can create widgets (not system admins)
+        return $user && $user->isAdmin() && !$user->isSystemAdmin() && $user->company_id;
     }
 
     public static function getRelations(): array

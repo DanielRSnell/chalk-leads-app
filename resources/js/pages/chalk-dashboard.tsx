@@ -1,5 +1,5 @@
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Zap, Target, TrendingUp, Users, BarChart3, ArrowRight, Sparkles, Code, Copy, X, ExternalLink } from 'lucide-react';
+import { Plus, Zap, Target, TrendingUp, Users, BarChart3, ArrowRight, Sparkles, Code, Copy, X, ExternalLink, Eye } from 'lucide-react';
 import { Head } from '@inertiajs/react';
 import { useState } from 'react';
 
@@ -58,7 +58,7 @@ export default function ChalkDashboard({ user, widgets = [], widgetCount = 0, le
                     <div className="flex items-center justify-between">
                         <div>
                             <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                                Welcome back, <span className="text-gradient-chalk">{user.name}!</span>
+                                Welcome back, <span className="text-primary">{user.name}!</span>
                             </h1>
                             <p className="text-gray-600">
                                 {isFirstTime 
@@ -70,7 +70,7 @@ export default function ChalkDashboard({ user, widgets = [], widgetCount = 0, le
                         
                         <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                             <Button 
-                                className="btn-chalk-gradient"
+                                className="bg-primary text-primary-foreground hover:bg-primary/90"
                                 onClick={() => window.location.href = route('widgets.create')}
                             >
                                 <Plus className="w-5 h-5 mr-2" />
@@ -89,11 +89,11 @@ export default function ChalkDashboard({ user, widgets = [], widgetCount = 0, le
                         className="space-y-8"
                     >
                         {/* Getting Started Hero */}
-                        <Card className="relative overflow-hidden bg-gradient-to-br from-purple-50 to-pink-50 border-0 shadow-xl p-8">
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-purple-400/20 to-pink-400/20 rounded-full blur-2xl"></div>
+                        <Card className="relative overflow-hidden bg-card border shadow-lg p-8">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-2xl"></div>
                             <div className="relative z-10">
                                 <div className="flex items-center mb-4">
-                                    <div className="w-12 h-12 bg-gradient-chalk rounded-xl flex items-center justify-center mr-4">
+                                    <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center mr-4">
                                         <Sparkles className="w-6 h-6 text-white" />
                                     </div>
                                     <div>
@@ -105,21 +105,21 @@ export default function ChalkDashboard({ user, widgets = [], widgetCount = 0, le
                                 <div className="flex items-center justify-between mt-6">
                                     <div className="flex items-center space-x-4 text-sm text-gray-600">
                                         <div className="flex items-center">
-                                            <Zap className="w-4 h-4 mr-1 text-purple-500" />
+                                            <Zap className="w-4 h-4 mr-1 text-primary" />
                                             5 min setup
                                         </div>
                                         <div className="flex items-center">
-                                            <Target className="w-4 h-4 mr-1 text-purple-500" />
+                                            <Target className="w-4 h-4 mr-1 text-primary" />
                                             95% conversion rate
                                         </div>
                                         <div className="flex items-center">
-                                            <TrendingUp className="w-4 h-4 mr-1 text-purple-500" />
+                                            <TrendingUp className="w-4 h-4 mr-1 text-primary" />
                                             Instant results
                                         </div>
                                     </div>
                                     
                                     <Button 
-                                        className="btn-chalk-gradient"
+                                        className="bg-primary text-primary-foreground hover:bg-primary/90"
                                         onClick={() => window.location.href = route('widgets.create')}
                                     >
                                         Get Started
@@ -136,9 +136,9 @@ export default function ChalkDashboard({ user, widgets = [], widgetCount = 0, le
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.3, duration: 0.5 }}
                             >
-                                <Card className="p-6 h-full border-2 border-transparent hover:border-purple-200 transition-colors">
-                                    <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center mb-4">
-                                        <div className="w-8 h-8 bg-purple-500 rounded-lg flex items-center justify-center text-white font-bold text-sm">1</div>
+                                <Card className="p-6 h-full border-2 border-transparent hover:border-primary/20 transition-colors">
+                                    <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mb-4">
+                                        <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white font-bold text-sm">1</div>
                                     </div>
                                     <h3 className="font-semibold text-lg mb-2">Choose Your Service</h3>
                                     <p className="text-gray-600 text-sm">Select from moving, home services, or any other industry. Our templates adapt to your needs.</p>
@@ -150,9 +150,9 @@ export default function ChalkDashboard({ user, widgets = [], widgetCount = 0, le
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.4, duration: 0.5 }}
                             >
-                                <Card className="p-6 h-full border-2 border-transparent hover:border-purple-200 transition-colors">
-                                    <div className="w-12 h-12 bg-pink-100 rounded-xl flex items-center justify-center mb-4">
-                                        <div className="w-8 h-8 bg-pink-500 rounded-lg flex items-center justify-center text-white font-bold text-sm">2</div>
+                                <Card className="p-6 h-full border-2 border-transparent hover:border-primary/20 transition-colors">
+                                    <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mb-4">
+                                        <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white font-bold text-sm">2</div>
                                     </div>
                                     <h3 className="font-semibold text-lg mb-2">Customize Experience</h3>
                                     <p className="text-gray-600 text-sm">Set up modules, pricing, and branding to match your business perfectly.</p>
@@ -164,9 +164,9 @@ export default function ChalkDashboard({ user, widgets = [], widgetCount = 0, le
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: 0.5, duration: 0.5 }}
                             >
-                                <Card className="p-6 h-full border-2 border-transparent hover:border-purple-200 transition-colors">
-                                    <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center mb-4">
-                                        <div className="w-8 h-8 bg-orange-500 rounded-lg flex items-center justify-center text-white font-bold text-sm">3</div>
+                                <Card className="p-6 h-full border-2 border-transparent hover:border-primary/20 transition-colors">
+                                    <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mb-4">
+                                        <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-white font-bold text-sm">3</div>
                                     </div>
                                     <h3 className="font-semibold text-lg mb-2">Deploy & Convert</h3>
                                     <p className="text-gray-600 text-sm">Embed on your site and start converting visitors into qualified leads instantly.</p>
@@ -177,18 +177,18 @@ export default function ChalkDashboard({ user, widgets = [], widgetCount = 0, le
                         {/* Example Preview */}
                         <Card className="p-6">
                             <h3 className="text-lg font-semibold mb-4">See what you'll build</h3>
-                            <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl p-8 text-center">
+                            <div className="bg-muted/50 rounded-xl p-8 text-center">
                                 <div className="max-w-md mx-auto space-y-4">
-                                    <div className="w-16 h-16 bg-gradient-chalk rounded-2xl flex items-center justify-center mx-auto">
+                                    <div className="w-16 h-16 bg-primary rounded-2xl flex items-center justify-center mx-auto">
                                         <div className="text-white text-2xl">🏠</div>
                                     </div>
                                     <h4 className="text-xl font-semibold">How can we help you today?</h4>
                                     <div className="grid grid-cols-2 gap-3">
-                                        <div className="bg-white rounded-lg p-3 border-2 border-purple-200 cursor-pointer">
+                                        <div className="bg-white rounded-lg p-3 border-2 border-primary cursor-pointer">
                                             <div className="text-lg mb-1">🚛</div>
                                             <div className="text-sm font-medium">Full Service Moving</div>
                                         </div>
-                                        <div className="bg-white rounded-lg p-3 border border-gray-200 cursor-pointer hover:border-purple-200">
+                                        <div className="bg-white rounded-lg p-3 border border-gray-200 cursor-pointer hover:border-primary/50">
                                             <div className="text-lg mb-1">💪</div>
                                             <div className="text-sm font-medium">Labor Only</div>
                                         </div>
@@ -214,8 +214,8 @@ export default function ChalkDashboard({ user, widgets = [], widgetCount = 0, le
                                         <p className="text-sm font-medium text-gray-600">Total Widgets</p>
                                         <p className="text-2xl font-bold text-gray-900">{widgetCount}</p>
                                     </div>
-                                    <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
-                                        <Zap className="w-6 h-6 text-purple-600" />
+                                    <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center">
+                                        <Zap className="w-6 h-6 text-primary" />
                                     </div>
                                 </div>
                             </Card>
@@ -226,8 +226,8 @@ export default function ChalkDashboard({ user, widgets = [], widgetCount = 0, le
                                         <p className="text-sm font-medium text-gray-600">Total Leads</p>
                                         <p className="text-2xl font-bold text-gray-900">{leadCount}</p>
                                     </div>
-                                    <div className="w-12 h-12 bg-green-100 rounded-xl flex items-center justify-center">
-                                        <Users className="w-6 h-6 text-green-600" />
+                                    <div className="w-12 h-12 bg-secondary/20 rounded-xl flex items-center justify-center">
+                                        <Users className="w-6 h-6 text-secondary-foreground" />
                                     </div>
                                 </div>
                             </Card>
@@ -236,10 +236,10 @@ export default function ChalkDashboard({ user, widgets = [], widgetCount = 0, le
                                 <div className="flex items-center justify-between">
                                     <div>
                                         <p className="text-sm font-medium text-gray-600">Conversion Rate</p>
-                                        <p className="text-2xl font-bold text-gray-900">85%</p>
+                                        <p className="text-2xl font-bold text-gray-900">0%</p>
                                     </div>
-                                    <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                                        <Target className="w-6 h-6 text-blue-600" />
+                                    <div className="w-12 h-12 bg-muted rounded-xl flex items-center justify-center">
+                                        <Target className="w-6 h-6 text-muted-foreground" />
                                     </div>
                                 </div>
                             </Card>
@@ -248,10 +248,10 @@ export default function ChalkDashboard({ user, widgets = [], widgetCount = 0, le
                                 <div className="flex items-center justify-between">
                                     <div>
                                         <p className="text-sm font-medium text-gray-600">This Month</p>
-                                        <p className="text-2xl font-bold text-gray-900">+24%</p>
+                                        <p className="text-2xl font-bold text-gray-900">0%</p>
                                     </div>
-                                    <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
-                                        <TrendingUp className="w-6 h-6 text-orange-600" />
+                                    <div className="w-12 h-12 bg-accent rounded-xl flex items-center justify-center">
+                                        <TrendingUp className="w-6 h-6 text-accent-foreground" />
                                     </div>
                                 </div>
                             </Card>
@@ -264,10 +264,10 @@ export default function ChalkDashboard({ user, widgets = [], widgetCount = 0, le
                                 <div className="space-y-3">
                                     {widgets.length > 0 ? (
                                         widgets.map((widget) => (
-                                            <div key={widget.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                                            <div key={widget.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
                                                 <div className="flex items-center">
-                                                    <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center mr-3">
-                                                        <Zap className="w-4 h-4 text-purple-600" />
+                                                    <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center mr-3">
+                                                        <Zap className="w-4 h-4 text-primary" />
                                                     </div>
                                                     <div>
                                                         <p className="font-medium text-sm">{widget.name}</p>
@@ -276,6 +276,15 @@ export default function ChalkDashboard({ user, widgets = [], widgetCount = 0, le
                                                     </div>
                                                 </div>
                                                 <div className="flex items-center space-x-2">
+                                                    <Button 
+                                                        variant="outline" 
+                                                        size="sm"
+                                                        onClick={() => window.open(`/widgets/${widget.id}/live`, '_blank')}
+                                                        className="flex items-center"
+                                                    >
+                                                        <Eye className="w-4 h-4 mr-1" />
+                                                        Preview
+                                                    </Button>
                                                     <Button 
                                                         variant="outline" 
                                                         size="sm"
@@ -301,18 +310,23 @@ export default function ChalkDashboard({ user, widgets = [], widgetCount = 0, le
                                 </div>
                             </Card>
 
-                            <Card className="p-6">
-                                <h3 className="text-lg font-semibold mb-4">Performance</h3>
-                                <div className="space-y-4">
+                            <Card className="p-6 relative">
+                                <div className="flex items-center justify-between mb-4">
+                                    <h3 className="text-lg font-semibold">Performance Analytics</h3>
+                                    <div className="px-3 py-1 bg-primary/10 text-primary text-xs font-medium rounded-full">
+                                        Coming Soon
+                                    </div>
+                                </div>
+                                <div className="space-y-4 opacity-50">
                                     <div className="flex items-center">
                                         <BarChart3 className="w-5 h-5 text-gray-400 mr-3" />
                                         <div className="flex-1">
                                             <div className="flex justify-between text-sm">
                                                 <span>Widget Views</span>
-                                                <span className="font-medium">1,234</span>
+                                                <span className="font-medium">-</span>
                                             </div>
-                                            <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
-                                                <div className="bg-purple-500 h-2 rounded-full" style={{ width: '75%' }}></div>
+                                            <div className="w-full bg-muted rounded-full h-2 mt-1">
+                                                <div className="bg-primary h-2 rounded-full" style={{ width: '0%' }}></div>
                                             </div>
                                         </div>
                                     </div>
@@ -321,12 +335,19 @@ export default function ChalkDashboard({ user, widgets = [], widgetCount = 0, le
                                         <div className="flex-1">
                                             <div className="flex justify-between text-sm">
                                                 <span>Conversions</span>
-                                                <span className="font-medium">987</span>
+                                                <span className="font-medium">-</span>
                                             </div>
-                                            <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
-                                                <div className="bg-green-500 h-2 rounded-full" style={{ width: '85%' }}></div>
+                                            <div className="w-full bg-muted rounded-full h-2 mt-1">
+                                                <div className="bg-secondary h-2 rounded-full" style={{ width: '0%' }}></div>
                                             </div>
                                         </div>
+                                    </div>
+                                </div>
+                                <div className="absolute inset-0 bg-muted/20 backdrop-blur-sm rounded-lg flex items-center justify-center">
+                                    <div className="text-center">
+                                        <BarChart3 className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                                        <p className="text-sm font-medium text-muted-foreground">Performance tracking</p>
+                                        <p className="text-xs text-muted-foreground">Coming soon</p>
                                     </div>
                                 </div>
                             </Card>
@@ -353,10 +374,10 @@ export default function ChalkDashboard({ user, widgets = [], widgetCount = 0, le
                             onClick={(e) => e.stopPropagation()}
                         >
                             {/* Modal Header */}
-                            <div className="p-6 border-b bg-gradient-to-r from-purple-50 to-pink-50">
+                            <div className="p-6 border-b bg-muted/30">
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center space-x-3">
-                                        <div className="w-12 h-12 bg-gradient-chalk rounded-xl flex items-center justify-center">
+                                        <div className="w-12 h-12 bg-primary rounded-xl flex items-center justify-center">
                                             <Code className="w-6 h-6 text-white" />
                                         </div>
                                         <div>
@@ -380,7 +401,7 @@ export default function ChalkDashboard({ user, widgets = [], widgetCount = 0, le
                                 {/* API Endpoint */}
                                 <div>
                                     <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
-                                        <ExternalLink className="w-5 h-5 mr-2 text-purple-600" />
+                                        <ExternalLink className="w-5 h-5 mr-2 text-primary" />
                                         API Endpoint
                                     </h3>
                                     <div className="bg-gray-50 rounded-lg p-4 border">

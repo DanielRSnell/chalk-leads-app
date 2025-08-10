@@ -4,16 +4,14 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Filament\Models\Contracts\FilamentUser;
-use Filament\Models\Contracts\HasTenants;
 use Filament\Panel;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-class User extends Authenticatable implements FilamentUser, HasTenants
+class User extends Authenticatable implements FilamentUser
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
@@ -68,27 +66,18 @@ class User extends Authenticatable implements FilamentUser, HasTenants
         return $this->role === 'admin';
     }
 
+    public function isSystemAdmin(): bool
+    {
+        return $this->role === 'system_admin';
+    }
+
     public function canAccessCompany(Company $company): bool
     {
-        return $this->company_id === $company->id;
+        return $this->isSystemAdmin() || $this->company_id === $company->id;
     }
 
     public function canAccessPanel(Panel $panel): bool
     {
-        return $this->is_active;
-    }
-
-    public function getTenants(Panel $panel): Collection
-    {
-        if (!$this->company) {
-            return Company::whereRaw('1 = 0')->get(); // Empty Eloquent Collection
-        }
-        
-        return Company::where('id', $this->company_id)->get();
-    }
-
-    public function canAccessTenant(Model $tenant): bool
-    {
-        return $this->company_id === $tenant->id;
+        return $this->is_active && ($this->isAdmin() || $this->isSystemAdmin());
     }
 }

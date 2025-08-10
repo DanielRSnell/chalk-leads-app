@@ -47,35 +47,35 @@ const serviceCategories = [
         id: 'moving-services', 
         name: 'Moving Services', 
         icon: Truck, 
-        color: 'bg-blue-500',
+        color: 'bg-primary',
         description: 'Local, long-distance, and specialty moving'
     },
     { 
         id: 'home-services', 
         name: 'Home Services', 
         icon: Home, 
-        color: 'bg-green-500',
+        color: 'bg-primary',
         description: 'Cleaning, handyman, and maintenance'
     },
     { 
         id: 'professional-services', 
         name: 'Professional Services', 
         icon: Briefcase, 
-        color: 'bg-purple-500',
+        color: 'bg-primary',
         description: 'Consulting, legal, and business services'
     },
     { 
         id: 'health-wellness', 
         name: 'Health & Wellness', 
         icon: Heart, 
-        color: 'bg-pink-500',
+        color: 'bg-primary',
         description: 'Fitness, therapy, and medical services'
     },
     { 
         id: 'business-services', 
         name: 'Business Services', 
         icon: Building2, 
-        color: 'bg-orange-500',
+        color: 'bg-primary',
         description: 'Marketing, accounting, and operations'
     },
     { 
@@ -199,9 +199,9 @@ export default function CreateWidget() {
                                     <motion.div
                                         className={`w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${
                                             currentStep > step.id 
-                                                ? 'bg-green-500 text-white' 
+                                                ? 'bg-primary text-primary-foreground' 
                                                 : currentStep === step.id 
-                                                ? 'bg-purple-500 text-white' 
+                                                ? 'bg-primary text-primary-foreground' 
                                                 : 'bg-gray-200 text-gray-500'
                                         }`}
                                         animate={{ 
@@ -213,7 +213,7 @@ export default function CreateWidget() {
                                     </motion.div>
                                     {index < steps.length - 1 && (
                                         <div className={`w-16 h-1 mx-2 rounded ${
-                                            currentStep > step.id ? 'bg-green-500' : 'bg-gray-200'
+                                            currentStep > step.id ? 'bg-primary' : 'bg-muted'
                                         }`} />
                                     )}
                                 </div>
@@ -255,7 +255,7 @@ export default function CreateWidget() {
                                                         onClick={() => setData('service_category', category.id)}
                                                         className={`p-6 border-2 rounded-xl cursor-pointer transition-all ${
                                                             data.service_category === category.id
-                                                                ? 'border-purple-500 bg-purple-50'
+                                                                ? 'border-primary bg-primary/10'
                                                                 : 'border-gray-200 hover:border-purple-300'
                                                         }`}
                                                     >

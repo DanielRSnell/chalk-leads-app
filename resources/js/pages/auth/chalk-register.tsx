@@ -66,7 +66,7 @@ export default function ChalkRegister() {
                             value={data.name}
                             onChange={(e) => setData('name', e.target.value)}
                             placeholder="Enter your full name"
-                            className="pl-11 h-12 border-gray-200 focus:border-purple-500 focus:ring-purple-500/20 rounded-xl"
+                            className="pl-11 h-12 border-gray-200 focus:border-primary focus:ring-primary/20 rounded-xl"
                         />
                     </div>
                     <InputError message={errors.name} />
@@ -93,7 +93,7 @@ export default function ChalkRegister() {
                             value={data.company_name}
                             onChange={(e) => setData('company_name', e.target.value)}
                             placeholder="Your company name"
-                            className="pl-11 h-12 border-gray-200 focus:border-purple-500 focus:ring-purple-500/20 rounded-xl"
+                            className="pl-11 h-12 border-gray-200 focus:border-primary focus:ring-primary/20 rounded-xl"
                         />
                     </div>
                     <InputError message={errors.company_name} />
@@ -120,7 +120,7 @@ export default function ChalkRegister() {
                             value={data.email}
                             onChange={(e) => setData('email', e.target.value)}
                             placeholder="Enter your work email"
-                            className="pl-11 h-12 border-gray-200 focus:border-purple-500 focus:ring-purple-500/20 rounded-xl"
+                            className="pl-11 h-12 border-gray-200 focus:border-primary focus:ring-primary/20 rounded-xl"
                         />
                     </div>
                     <InputError message={errors.email} />
@@ -147,7 +147,7 @@ export default function ChalkRegister() {
                             value={data.password}
                             onChange={(e) => setData('password', e.target.value)}
                             placeholder="Create a strong password"
-                            className="pl-11 pr-11 h-12 border-gray-200 focus:border-purple-500 focus:ring-purple-500/20 rounded-xl"
+                            className="pl-11 pr-11 h-12 border-gray-200 focus:border-primary focus:ring-primary/20 rounded-xl"
                         />
                         <button
                             type="button"
@@ -181,7 +181,7 @@ export default function ChalkRegister() {
                             value={data.password_confirmation}
                             onChange={(e) => setData('password_confirmation', e.target.value)}
                             placeholder="Confirm your password"
-                            className="pl-11 pr-11 h-12 border-gray-200 focus:border-purple-500 focus:ring-purple-500/20 rounded-xl"
+                            className="pl-11 pr-11 h-12 border-gray-200 focus:border-primary focus:ring-primary/20 rounded-xl"
                         />
                         <button
                             type="button"
@@ -225,9 +225,9 @@ export default function ChalkRegister() {
                     className="text-center text-xs text-gray-500"
                 >
                     By creating an account, you agree to our{' '}
-                    <a href="#" className="text-purple-600 hover:text-purple-500">Terms of Service</a>
+                    <a href="#" className="text-primary hover:text-primary/80">Terms of Service</a>
                     {' '}and{' '}
-                    <a href="#" className="text-purple-600 hover:text-purple-500">Privacy Policy</a>
+                    <a href="#" className="text-primary hover:text-primary/80">Privacy Policy</a>
                 </motion.div>
 
                 {/* Sign in link */}
@@ -241,7 +241,7 @@ export default function ChalkRegister() {
                         Already have an account?{' '}
                         <TextLink 
                             href={route('login')} 
-                            className="font-semibold text-purple-600 hover:text-purple-500"
+                            className="font-semibold text-primary hover:text-primary/80"
                             tabIndex={7}
                         >
                             Sign in

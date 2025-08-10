@@ -77,7 +77,7 @@ export default function ChalkLogin({ status, canResetPassword }: LoginProps) {
                             value={data.email}
                             onChange={(e) => setData('email', e.target.value)}
                             placeholder="Enter your email"
-                            className="pl-11 h-12 border-gray-200 focus:border-purple-500 focus:ring-purple-500/20 rounded-xl"
+                            className="pl-11 h-12 border-gray-200 focus:border-primary focus:ring-primary/20 rounded-xl"
                         />
                     </div>
                     <InputError message={errors.email} />
@@ -97,7 +97,7 @@ export default function ChalkLogin({ status, canResetPassword }: LoginProps) {
                         {canResetPassword && (
                             <TextLink 
                                 href={route('password.request')} 
-                                className="text-sm text-purple-600 hover:text-purple-500"
+                                className="text-sm text-primary hover:text-primary/80"
                                 tabIndex={5}
                             >
                                 Forgot password?
@@ -115,7 +115,7 @@ export default function ChalkLogin({ status, canResetPassword }: LoginProps) {
                             value={data.password}
                             onChange={(e) => setData('password', e.target.value)}
                             placeholder="Enter your password"
-                            className="pl-11 pr-11 h-12 border-gray-200 focus:border-purple-500 focus:ring-purple-500/20 rounded-xl"
+                            className="pl-11 pr-11 h-12 border-gray-200 focus:border-primary focus:ring-primary/20 rounded-xl"
                         />
                         <button
                             type="button"
@@ -181,7 +181,7 @@ export default function ChalkLogin({ status, canResetPassword }: LoginProps) {
                         Don't have an account?{' '}
                         <TextLink 
                             href={route('register')} 
-                            className="font-semibold text-purple-600 hover:text-purple-500"
+                            className="font-semibold text-primary hover:text-primary/80"
                             tabIndex={6}
                         >
                             Start your free trial

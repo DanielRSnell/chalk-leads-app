@@ -16,7 +16,8 @@ import {
     ChevronUp,
     Plus,
     Trash2,
-    Save
+    Save,
+    Calculator
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -27,6 +28,7 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select } from '@/components/ui/select';
 import AppLayout from '@/layouts/app-layout';
+import EstimateTestDrawer from '@/components/EstimateTestDrawer';
 import { type BreadcrumbItem } from '@/types';
 
 const breadcrumbs: BreadcrumbItem[] = [
@@ -221,6 +223,7 @@ const steps = [
 export default function CreateAdvancedWidget() {
     const [currentStep, setCurrentStep] = useState(1);
     const [expandedModules, setExpandedModules] = useState<string[]>([]);
+    const [showEstimateTest, setShowEstimateTest] = useState(false);
     
     const { data, setData, post, processing, errors } = useForm<CreateWidgetForm>({
         name: '',
@@ -675,7 +678,7 @@ export default function CreateAdvancedWidget() {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Create Widget - Chalk" />
             
-            <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-purple-50/30 p-6">
+            <div className="min-h-screen bg-background p-6">
                 <div className="max-w-6xl mx-auto">
                     {/* Progress Header */}
                     <motion.div
@@ -702,7 +705,7 @@ export default function CreateAdvancedWidget() {
                                             currentStep > step.id 
                                                 ? 'bg-green-500 text-white' 
                                                 : currentStep === step.id 
-                                                ? 'bg-purple-500 text-white' 
+                                                ? 'bg-primary text-primary-foreground' 
                                                 : 'bg-gray-200 text-gray-500'
                                         }`}
                                         animate={{ 
@@ -733,9 +736,44 @@ export default function CreateAdvancedWidget() {
                         transition={{ duration: 0.3 }}
                     >
                         <Card className="p-8 shadow-xl border-0 bg-white/90 backdrop-blur-sm">
-                            <div className="mb-8">
+                            <div className="mb-6">
                                 <h2 className="text-2xl font-bold text-gray-900 mb-2">{steps[currentStep - 1].title}</h2>
                                 <p className="text-gray-600">{steps[currentStep - 1].subtitle}</p>
+                            </div>
+
+                            {/* Navigation - Moved to top */}
+                            <div className="flex justify-between mb-8 pb-6 border-b">
+                                <Button
+                                    variant="outline"
+                                    onClick={prevStep}
+                                    disabled={currentStep === 1}
+                                    className="flex items-center"
+                                >
+                                    <ArrowLeft className="w-4 h-4 mr-2" />
+                                    Previous
+                                </Button>
+
+                                <div className="flex space-x-3">
+                                    {currentStep < steps.length ? (
+                                        <Button
+                                            onClick={nextStep}
+                                            disabled={!canProceed()}
+                                            className="bg-primary text-primary-foreground hover:bg-primary/90 flex items-center"
+                                        >
+                                            Continue
+                                            <ArrowRight className="w-4 h-4 ml-2" />
+                                        </Button>
+                                    ) : (
+                                        <Button
+                                            onClick={handleSubmit}
+                                            disabled={processing || !canProceed()}
+                                            className="bg-primary text-primary-foreground hover:bg-primary/90 flex items-center"
+                                        >
+                                            {processing ? 'Creating...' : 'Create Widget'}
+                                            <Sparkles className="w-4 h-4 ml-2" />
+                                        </Button>
+                                    )}
+                                </div>
                             </div>
 
                             <AnimatePresence mode="wait">
@@ -761,8 +799,8 @@ export default function CreateAdvancedWidget() {
                                                             onClick={() => setData('service_category', category.id)}
                                                             className={`p-4 border-2 rounded-xl cursor-pointer transition-all ${
                                                                 data.service_category === category.id
-                                                                    ? 'border-purple-500 bg-purple-50'
-                                                                    : 'border-gray-200 hover:border-purple-300'
+                                                                    ? 'border-primary bg-primary/5'
+                                                                    : 'border-border hover:border-border/60'
                                                             }`}
                                                         >
                                                             <div className="flex items-start space-x-3">
@@ -838,36 +876,44 @@ export default function CreateAdvancedWidget() {
                                         exit={{ opacity: 0, y: -20 }}
                                         className="space-y-6"
                                     >
-                                        <div className="grid gap-4">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                                             {moduleDefinitions.map((module) => (
-                                                <div
+                                                <Card
                                                     key={module.id}
-                                                    className={`p-4 border-2 rounded-lg transition-colors ${
+                                                    className={`p-4 border-2 transition-all duration-200 hover:shadow-md cursor-pointer ${
                                                         data.enabled_modules.includes(module.id)
-                                                            ? 'border-purple-200 bg-purple-50'
-                                                            : 'border-gray-200'
-                                                    } ${module.required ? 'opacity-75' : ''}`}
+                                                            ? 'border-primary bg-primary/5 shadow-sm'
+                                                            : 'border-border hover:border-border/60'
+                                                    } ${module.required ? 'opacity-90' : ''}`}
+                                                    onClick={() => !module.required && toggleModule(module.id)}
                                                 >
-                                                    <div className="flex items-start space-x-4">
-                                                        <Checkbox
-                                                            checked={data.enabled_modules.includes(module.id)}
-                                                            disabled={module.required}
-                                                            onClick={() => toggleModule(module.id)}
-                                                        />
-                                                        <div className="flex-1">
-                                                            <div className="flex items-center space-x-2">
-                                                                <h4 className="font-medium">{module.name}</h4>
+                                                    <div className="space-y-3">
+                                                        <div className="flex items-start justify-between">
+                                                            <Checkbox
+                                                                checked={data.enabled_modules.includes(module.id)}
+                                                                disabled={module.required}
+                                                                onClick={() => toggleModule(module.id)}
+                                                                className="mt-0.5"
+                                                            />
+                                                            <div className="flex flex-col gap-1">
                                                                 {module.required && (
-                                                                    <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded">Required</span>
+                                                                    <span className="text-xs bg-secondary text-secondary-foreground px-2 py-1 rounded-full font-medium">
+                                                                        Required
+                                                                    </span>
                                                                 )}
                                                                 {module.configurable && (
-                                                                    <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded">Configurable</span>
+                                                                    <span className="text-xs bg-blue-100 text-blue-700 px-2 py-1 rounded-full font-medium">
+                                                                        Configurable
+                                                                    </span>
                                                                 )}
                                                             </div>
-                                                            <p className="text-sm text-gray-600">{module.description}</p>
+                                                        </div>
+                                                        <div className="space-y-2">
+                                                            <h4 className="font-semibold text-sm leading-tight">{module.name}</h4>
+                                                            <p className="text-xs text-gray-600 leading-relaxed">{module.description}</p>
                                                         </div>
                                                     </div>
-                                                </div>
+                                                </Card>
                                             ))}
                                         </div>
                                     </motion.div>
@@ -881,7 +927,18 @@ export default function CreateAdvancedWidget() {
                                         exit={{ opacity: 0, y: -20 }}
                                         className="space-y-4"
                                     >
-                                        <p className="text-gray-600 mb-6">Configure each enabled module. Click on a module to expand its configuration options.</p>
+                                        <div className="flex items-center justify-between mb-6">
+                                            <p className="text-gray-600">Configure each enabled module. Click on a module to expand its configuration options.</p>
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                onClick={() => setShowEstimateTest(true)}
+                                                className="ml-4 flex items-center"
+                                            >
+                                                <Calculator className="w-4 h-4 mr-2" />
+                                                Test Estimate
+                                            </Button>
+                                        </div>
                                         
                                         {data.enabled_modules.map((moduleId) => {
                                             const module = moduleDefinitions.find(m => m.id === moduleId);
@@ -1109,7 +1166,7 @@ export default function CreateAdvancedWidget() {
                                                     {data.enabled_modules.map(moduleId => {
                                                         const module = moduleDefinitions.find(m => m.id === moduleId);
                                                         return (
-                                                            <span key={moduleId} className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm">
+                                                            <span key={moduleId} className="px-3 py-1 bg-secondary text-secondary-foreground rounded-full text-sm">
                                                                 {module?.name}
                                                             </span>
                                                         );
@@ -1125,45 +1182,33 @@ export default function CreateAdvancedWidget() {
                                     </motion.div>
                                 )}
                             </AnimatePresence>
-
-                            {/* Navigation */}
-                            <div className="flex justify-between mt-8 pt-6 border-t">
-                                <Button
-                                    variant="outline"
-                                    onClick={prevStep}
-                                    disabled={currentStep === 1}
-                                    className="flex items-center"
-                                >
-                                    <ArrowLeft className="w-4 h-4 mr-2" />
-                                    Previous
-                                </Button>
-
-                                <div className="flex space-x-3">
-                                    {currentStep < steps.length ? (
-                                        <Button
-                                            onClick={nextStep}
-                                            disabled={!canProceed()}
-                                            className="btn-chalk-gradient flex items-center"
-                                        >
-                                            Continue
-                                            <ArrowRight className="w-4 h-4 ml-2" />
-                                        </Button>
-                                    ) : (
-                                        <Button
-                                            onClick={handleSubmit}
-                                            disabled={processing || !canProceed()}
-                                            className="btn-chalk-gradient flex items-center"
-                                        >
-                                            {processing ? 'Creating...' : 'Create Widget'}
-                                            <Sparkles className="w-4 h-4 ml-2" />
-                                        </Button>
-                                    )}
-                                </div>
-                            </div>
                         </Card>
                     </motion.div>
                 </div>
             </div>
+
+            {/* Estimate Test Drawer */}
+            <EstimateTestDrawer
+                isOpen={showEstimateTest}
+                onClose={() => setShowEstimateTest(false)}
+                widget={{
+                    id: 0, // Temporary ID for preview
+                    name: data.name || 'New Widget',
+                    enabled_modules: data.enabled_modules,
+                    module_configs: data.module_configs,
+                    pricing: {
+                        base_price: 100,
+                        currency: 'USD',
+                        tax_rate: data.settings?.tax_rate || 0.08,
+                        project_scope: { small: 50, medium: 100, large: 200 },
+                        service_types: { standard: 0, premium: 50, express: 100 },
+                        location_services: { local: 0, regional: 25, national: 50 },
+                        timeline: { immediate: 100, within_week: 50, within_month: 0, flexible: -25 },
+                        additional_services: { packing: 75, storage: 50, cleaning: 40, assembly: 30 },
+                        urgency: { immediate: 100, urgent: 50, normal: 0, flexible: -20 }
+                    }
+                }}
+            />
         </AppLayout>
     );
 }

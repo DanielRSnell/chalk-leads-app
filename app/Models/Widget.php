@@ -22,6 +22,7 @@ class Widget extends Model
         'module_configs',
         'branding',
         'settings',
+        'pricing',
     ];
 
     protected $casts = [
@@ -29,6 +30,7 @@ class Widget extends Model
         'module_configs' => 'array',
         'branding' => 'array',
         'settings' => 'array',
+        'pricing' => 'array',
     ];
 
     protected static function boot()
@@ -212,9 +214,19 @@ class Widget extends Model
     private function getPricingConfiguration(): array
     {
         $pricing = [];
-        foreach ($this->pricing as $pricingRule) {
-            $pricing[$pricingRule->category] = $pricingRule->pricing_rules;
+        
+        // Load pricing relationship if not already loaded
+        if (!$this->relationLoaded('pricing')) {
+            $this->load('pricing');
         }
+        
+        // Check if pricing relationship exists and iterate safely
+        if ($this->pricing && $this->pricing->count() > 0) {
+            foreach ($this->pricing as $pricingRule) {
+                $pricing[$pricingRule->category] = $pricingRule->pricing_rules;
+            }
+        }
+        
         return $pricing;
     }
 
@@ -258,8 +270,8 @@ class Widget extends Model
             'date-selection' => ['type' => 'calendar', 'centered' => true],
             'origin-location' => ['type' => 'form', 'centered' => false],
             'target-location' => ['type' => 'form', 'centered' => false],
-            'origin-challenges' => ['type' => 'challenges', 'centered' => false],
-            'target-challenges' => ['type' => 'challenges', 'centered' => false],
+            'origin-challenges' => ['type' => 'challenges', 'centered' => false, 'selectable' => 'multiple'],
+            'target-challenges' => ['type' => 'challenges', 'centered' => false, 'selectable' => 'multiple'],
             'distance-calculation' => ['type' => 'route-calculation', 'centered' => true],
             'supply-selection' => ['type' => 'catalog', 'columns' => 2],
             'additional-services' => ['type' => 'list', 'selectable' => 'multiple']

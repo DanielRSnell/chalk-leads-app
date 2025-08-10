@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
     ArrowLeft, 
     ArrowRight, 
+    ArrowUpDown,
     Check, 
     Truck, 
     Home, 
@@ -16,9 +17,11 @@ import {
     ChevronUp,
     Plus,
     Trash2,
-    Save
+    Save,
+    Calculator,
+    Eye
 } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -26,6 +29,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import AppLayout from '@/layouts/app-layout';
+import EstimateTestDrawer from '@/components/EstimateTestDrawer';
 import { type BreadcrumbItem } from '@/types';
 
 interface EditAdvancedWidgetProps {
@@ -245,6 +249,11 @@ export default function EditAdvancedWidget({ widget }: EditAdvancedWidgetProps) 
     const [currentStep, setCurrentStep] = useState(1);
     const [selectedModule, setSelectedModule] = useState<string | null>(null);
     const [expandedModules, setExpandedModules] = useState<string[]>([]);
+    const [showEstimateTest, setShowEstimateTest] = useState(false);
+    const [isReorderMode, setIsReorderMode] = useState(false);
+    const [draggedModule, setDraggedModule] = useState<string | null>(null);
+    
+    // Component initialized
     
     const { data, setData, put, processing, errors } = useForm<EditWidgetForm>({
         name: widget.name || '',
@@ -266,6 +275,14 @@ export default function EditAdvancedWidget({ widget }: EditAdvancedWidgetProps) 
         },
     });
 
+    // Debug: Log when date-selection is enabled
+    useEffect(() => {
+        const hasDateSelection = data.enabled_modules.includes('date-selection');
+        if (hasDateSelection) {
+            console.log('✅ Date-selection module enabled in form');
+        }
+    }, [data.enabled_modules]);
+
     const nextStep = () => {
         if (currentStep < steps.length) {
             setCurrentStep(currentStep + 1);
@@ -280,21 +297,93 @@ export default function EditAdvancedWidget({ widget }: EditAdvancedWidgetProps) 
 
     const toggleModule = (moduleId: string) => {
         const module = moduleDefinitions.find(m => m.id === moduleId);
-        if (module?.required) return; // Can't toggle required modules
+        if (module?.required) {
+            return;
+        }
         
         const currentModules = data.enabled_modules;
-        const newModules = currentModules.includes(moduleId)
-            ? currentModules.filter(id => id !== moduleId)
-            : [...currentModules, moduleId];
+        const isCurrentlyEnabled = currentModules.includes(moduleId);
         
-        setData('enabled_modules', newModules);
+        let newModules: string[];
+        const newConfigs = { ...data.module_configs };
         
-        // Remove module config if disabled
-        if (!newModules.includes(moduleId)) {
-            const newConfigs = { ...data.module_configs };
+        if (isCurrentlyEnabled) {
+            newModules = currentModules.filter(id => id !== moduleId);
             delete newConfigs[moduleId];
-            setData('module_configs', newConfigs);
+        } else {
+            newModules = [...currentModules, moduleId];
+            
+            // Add default config if not already configured
+            if (!newConfigs[moduleId]) {
+                const defaultConfig = getDefaultModuleConfig(moduleId);
+                newConfigs[moduleId] = defaultConfig;
+            }
         }
+        
+        // Update local state - this will persist when the form is saved
+        setData((prevData) => ({
+            ...prevData,
+            enabled_modules: newModules,
+            module_configs: newConfigs
+        }));
+    };
+
+    const getDefaultModuleConfig = (moduleId: string) => {
+        const defaults: Record<string, any> = {
+            'date-selection': {
+                title: 'When do you need service?',
+                subtitle: 'Select your preferred service date'
+            },
+            'time-selection': {
+                title: 'What\'s your preferred start time?',
+                subtitle: 'Choose your ideal time window',
+                options: [
+                    {
+                        id: 'morning',
+                        title: 'Morning (8AM-12PM)',
+                        value: 'morning',
+                        price_multiplier: 1.0
+                    },
+                    {
+                        id: 'afternoon', 
+                        title: 'Afternoon (12PM-4PM)',
+                        value: 'afternoon',
+                        price_multiplier: 1.0
+                    },
+                    {
+                        id: 'evening',
+                        title: 'Evening (4PM-8PM)', 
+                        value: 'evening',
+                        price_multiplier: 1.1
+                    }
+                ]
+            },
+            'origin-location': {
+                title: 'Where are you moving from?',
+                subtitle: 'Enter your pickup address',
+                address_label: 'Pickup Address'
+            },
+            'target-location': {
+                title: 'Where are you moving to?',
+                subtitle: 'Enter your destination address', 
+                address_label: 'Destination Address'
+            },
+            'additional-services': {
+                title: 'Any additional services?',
+                subtitle: 'Select any additional services you might need',
+                options: []
+            },
+            'supply-selection': {
+                title: 'Select Moving Supplies',
+                subtitle: 'Choose from our professional moving supplies',
+                options: []
+            }
+        };
+        
+        return defaults[moduleId] || {
+            title: 'Module Title',
+            subtitle: 'Module subtitle'
+        };
     };
 
     const updateModuleConfig = (moduleId: string, field: string, value: any) => {
@@ -435,6 +524,47 @@ export default function EditAdvancedWidget({ widget }: EditAdvancedWidgetProps) 
         );
     };
 
+    // Drag and drop handlers for module reordering
+    const handleDragStart = (e: React.DragEvent, moduleId: string) => {
+        setDraggedModule(moduleId);
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', moduleId);
+    };
+
+    const handleDragOver = (e: React.DragEvent) => {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+    };
+
+    const handleDrop = (e: React.DragEvent, targetModuleId: string) => {
+        e.preventDefault();
+        
+        if (!draggedModule || draggedModule === targetModuleId) return;
+        
+        const currentModules = [...data.enabled_modules];
+        const draggedIndex = currentModules.indexOf(draggedModule);
+        const targetIndex = currentModules.indexOf(targetModuleId);
+        
+        if (draggedIndex !== -1 && targetIndex !== -1) {
+            // Remove dragged item
+            const [removed] = currentModules.splice(draggedIndex, 1);
+            // Insert at target position
+            currentModules.splice(targetIndex, 0, removed);
+            
+            // Update form data
+            setData(prevData => ({
+                ...prevData,
+                enabled_modules: currentModules
+            }));
+        }
+        
+        setDraggedModule(null);
+    };
+
+    const handleDragEnd = () => {
+        setDraggedModule(null);
+    };
+
     const renderModuleForm = (moduleId: string) => {
         const module = moduleDefinitions.find(m => m.id === moduleId);
         const config = data.module_configs[moduleId] || {};
@@ -572,10 +702,36 @@ export default function EditAdvancedWidget({ widget }: EditAdvancedWidgetProps) 
     };
 
     const handleSubmit = () => {
-        put(route('widgets.update', widget.id), {
+        console.log('💾 Saving widget changes...');
+        
+        // Clean up data before submission
+        const cleanDomain = (domain: string | null): string | null => {
+            if (!domain || domain.trim() === '') return null;
+            
+            const trimmed = domain.trim();
+            // If it doesn't start with http:// or https://, add https://
+            if (!trimmed.startsWith('http://') && !trimmed.startsWith('https://')) {
+                return `https://${trimmed}`;
+            }
+            return trimmed;
+        };
+        
+        const submissionData = {
+            ...data,
+            domain: cleanDomain(data.domain)
+        };
+        
+        // Data cleaned and ready for submission
+        
+        put(route('widgets.update', widget.id), submissionData, {
             onSuccess: () => {
+                console.log('✅ Widget update successful');
                 window.location.href = route('dashboard');
             },
+            onError: (errors) => {
+                console.error('❌ Widget update failed:', errors);
+                console.error('📋 Form data that failed:', submissionData);
+            }
         });
     };
 
@@ -601,7 +757,7 @@ export default function EditAdvancedWidget({ widget }: EditAdvancedWidgetProps) 
                     <Button
                         type="button"
                         onClick={() => addSupplyCategory(moduleId)}
-                        className="btn-chalk-gradient flex items-center"
+                        className="bg-primary text-primary-foreground hover:bg-primary/90 flex items-center"
                     >
                         <Plus className="w-4 h-4 mr-2" />
                         Add Category
@@ -613,7 +769,7 @@ export default function EditAdvancedWidget({ widget }: EditAdvancedWidgetProps) 
                         <Card key={categoryIndex} className="p-6 border-2">
                             <div className="flex items-center justify-between mb-6">
                                 <div className="flex items-center space-x-3">
-                                    <div className="w-10 h-10 rounded-lg bg-purple-100 flex items-center justify-center">
+                                    <div className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center">
                                         <span className="text-lg">{categoryIndex + 1}</span>
                                     </div>
                                     <h5 className="font-semibold text-gray-900">{category.name || `Category ${categoryIndex + 1}`}</h5>
@@ -762,7 +918,7 @@ export default function EditAdvancedWidget({ widget }: EditAdvancedWidgetProps) 
                     <Button
                         type="button"
                         onClick={() => addModuleOption(moduleId)}
-                        className="btn-chalk-gradient flex items-center"
+                        className="bg-primary text-primary-foreground hover:bg-primary/90 flex items-center"
                     >
                         <Plus className="w-4 h-4 mr-2" />
                         Add Option
@@ -889,7 +1045,7 @@ export default function EditAdvancedWidget({ widget }: EditAdvancedWidgetProps) 
                                         <select
                                             value={option.pricing_type || 'fixed'}
                                             onChange={(e) => updateModuleOption(moduleId, index, 'pricing_type', e.target.value)}
-                                            className="w-full px-3 py-2 mt-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                                            className="w-full px-3 py-2 mt-2 border border-input rounded-md focus:ring-2 focus:ring-ring focus:border-transparent"
                                         >
                                             <option value="fixed">Fixed Amount</option>
                                             <option value="percentage">Percentage</option>
@@ -949,7 +1105,7 @@ export default function EditAdvancedWidget({ widget }: EditAdvancedWidgetProps) 
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`Edit ${widget.name} - Chalk`} />
             
-            <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-purple-50/30 p-6">
+            <div className="min-h-screen bg-background p-6">
                 <div className="max-w-6xl mx-auto">
                     {/* Progress Header */}
                     <motion.div
@@ -988,7 +1144,7 @@ export default function EditAdvancedWidget({ widget }: EditAdvancedWidgetProps) 
                                             currentStep > step.id 
                                                 ? 'bg-green-500 text-white' 
                                                 : currentStep === step.id 
-                                                ? 'bg-purple-500 text-white' 
+                                                ? 'bg-primary text-primary-foreground' 
                                                 : 'bg-gray-200 text-gray-500'
                                         }`}
                                         animate={{ 
@@ -1019,9 +1175,60 @@ export default function EditAdvancedWidget({ widget }: EditAdvancedWidgetProps) 
                         transition={{ duration: 0.3 }}
                     >
                         <Card className="p-8 shadow-xl border-0 bg-white/90 backdrop-blur-sm">
-                            <div className="mb-8">
+                            <div className="mb-6">
                                 <h2 className="text-2xl font-bold text-gray-900 mb-2">{steps[currentStep - 1].title}</h2>
                                 <p className="text-gray-600">{steps[currentStep - 1].subtitle}</p>
+                            </div>
+
+                            {/* Navigation - Moved to top */}
+                            <div className="flex justify-between mb-8 pb-6 border-b">
+                                {currentStep === 3 && selectedModule ? (
+                                    // Special navigation when in module editing mode
+                                    <div className="flex items-center space-x-4">
+                                        <span className="text-sm text-gray-500">Editing module configuration</span>
+                                    </div>
+                                ) : (
+                                    <Button
+                                        variant="outline"
+                                        onClick={prevStep}
+                                        disabled={currentStep === 1}
+                                        className="flex items-center"
+                                    >
+                                        <ArrowLeft className="w-4 h-4 mr-2" />
+                                        Previous
+                                    </Button>
+                                )}
+
+                                <div className="flex space-x-3">
+                                    {currentStep === 3 && selectedModule ? (
+                                        // Save module and return to grid
+                                        <Button
+                                            onClick={() => setSelectedModule(null)}
+                                            className="bg-primary text-primary-foreground hover:bg-primary/90 flex items-center"
+                                        >
+                                            <Save className="w-4 h-4 mr-2" />
+                                            Save & Close
+                                        </Button>
+                                    ) : currentStep < steps.length ? (
+                                        <Button
+                                            onClick={nextStep}
+                                            disabled={!canProceed()}
+                                            className="bg-primary text-primary-foreground hover:bg-primary/90 flex items-center"
+                                        >
+                                            Continue
+                                            <ArrowRight className="w-4 h-4 ml-2" />
+                                        </Button>
+                                    ) : (
+                                        <Button
+                                            onClick={handleSubmit}
+                                            disabled={processing || !canProceed()}
+                                            className="bg-primary text-primary-foreground hover:bg-primary/90 flex items-center"
+                                        >
+                                            {processing ? 'Saving...' : 'Save Changes'}
+                                            <Save className="w-4 h-4 ml-2" />
+                                        </Button>
+                                    )}
+                                </div>
                             </div>
 
                             <AnimatePresence mode="wait">
@@ -1106,33 +1313,43 @@ export default function EditAdvancedWidget({ widget }: EditAdvancedWidgetProps) 
                                         exit={{ opacity: 0, y: -20 }}
                                         className="space-y-6"
                                     >
-                                        <div className="grid gap-4">
+                                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                                             {moduleDefinitions.map((module) => (
-                                                <div
+                                                <Card
                                                     key={module.id}
-                                                    className={`p-4 border-2 rounded-lg transition-colors ${
+                                                    className={`p-4 border-2 transition-all duration-200 hover:shadow-md cursor-pointer ${
                                                         data.enabled_modules.includes(module.id)
-                                                            ? 'border-purple-200 bg-purple-50'
-                                                            : 'border-gray-200'
-                                                    } ${module.required ? 'opacity-75' : ''}`}
+                                                            ? 'border-primary bg-primary/5 shadow-sm'
+                                                            : 'border-border hover:border-border/60'
+                                                    } ${module.required ? 'opacity-90' : ''}`}
+                                                    onClick={() => !module.required && toggleModule(module.id)}
                                                 >
-                                                    <div className="flex items-start space-x-4">
-                                                        <Checkbox
-                                                            checked={data.enabled_modules.includes(module.id)}
-                                                            disabled={module.required}
-                                                            onCheckedChange={() => toggleModule(module.id)}
-                                                        />
-                                                        <div className="flex-1">
-                                                            <div className="flex items-center space-x-2">
-                                                                <h4 className="font-medium">{module.name}</h4>
-                                                                {module.required && (
-                                                                    <span className="text-xs bg-purple-100 text-purple-700 px-2 py-1 rounded">Required</span>
-                                                                )}
-                                                            </div>
-                                                            <p className="text-sm text-gray-600">{module.description}</p>
+                                                    <div className="space-y-3">
+                                                        <div className="flex items-start justify-between">
+                                                            <Checkbox
+                                                                checked={data.enabled_modules.includes(module.id)}
+                                                                disabled={module.required}
+                                                                onCheckedChange={() => {
+                                                                    console.log(`🔘 Checkbox clicked for module: ${module.id}`, {
+                                                                        currentlyChecked: data.enabled_modules.includes(module.id),
+                                                                        willBeChecked: !data.enabled_modules.includes(module.id)
+                                                                    });
+                                                                    toggleModule(module.id);
+                                                                }}
+                                                                className="mt-0.5"
+                                                            />
+                                                            {module.required && (
+                                                                <span className="text-xs bg-secondary text-secondary-foreground px-2 py-1 rounded-full font-medium">
+                                                                    Required
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        <div className="space-y-2">
+                                                            <h4 className="font-semibold text-sm leading-tight">{module.name}</h4>
+                                                            <p className="text-xs text-gray-600 leading-relaxed">{module.description}</p>
                                                         </div>
                                                     </div>
-                                                </div>
+                                                </Card>
                                             ))}
                                         </div>
                                     </motion.div>
@@ -1149,52 +1366,171 @@ export default function EditAdvancedWidget({ widget }: EditAdvancedWidgetProps) 
                                                 className="space-y-6"
                                             >
                                                 <div className="text-center mb-8">
-                                                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Configure Your Modules</h3>
-                                                    <p className="text-gray-600">
-                                                        Click on any module to configure its settings, pricing, and options.
-                                                    </p>
+                                                    <div className="flex items-center justify-between mb-4">
+                                                        <div className="flex-1">
+                                                            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                                                                {isReorderMode ? 'Reorder Your Modules' : 'Configure Your Modules'}
+                                                            </h3>
+                                                            <p className="text-gray-600">
+                                                                {isReorderMode 
+                                                                    ? 'Drag and drop modules to change their order in the customer journey.'
+                                                                    : 'Click on any module to configure its settings, pricing, and options.'
+                                                                }
+                                                            </p>
+                                                        </div>
+                                                        <div className="flex space-x-3">
+                                                            {isReorderMode ? (
+                                                                <Button
+                                                                    type="button"
+                                                                    onClick={() => setIsReorderMode(false)}
+                                                                    className="flex items-center"
+                                                                >
+                                                                    Done Reordering
+                                                                </Button>
+                                                            ) : (
+                                                                <>
+                                                                    <Button
+                                                                        type="button"
+                                                                        variant="outline"
+                                                                        onClick={() => setIsReorderMode(true)}
+                                                                        className="flex items-center"
+                                                                    >
+                                                                        <ArrowUpDown className="w-4 h-4 mr-2" />
+                                                                        Reorder Modules
+                                                                    </Button>
+                                                                    <Button
+                                                                        type="button"
+                                                                        variant="outline"
+                                                                        onClick={() => setShowEstimateTest(true)}
+                                                                        className="flex items-center"
+                                                                    >
+                                                                        <Calculator className="w-4 h-4 mr-2" />
+                                                                        Test Estimate
+                                                                    </Button>
+                                                                    <Button
+                                                                        type="button"
+                                                                        variant="outline"
+                                                                        onClick={() => window.open(`/widgets/${widget.id}/live`, '_blank')}
+                                                                        className="flex items-center"
+                                                                    >
+                                                                        <Eye className="w-4 h-4 mr-2" />
+                                                                        Preview
+                                                                    </Button>
+                                                                </>
+                                                            )}
+                                                        </div>
+                                                    </div>
                                                 </div>
                                                 
-                                                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                                    {data.enabled_modules.map((moduleId) => {
-                                                        const module = moduleDefinitions.find(m => m.id === moduleId);
-                                                        if (!module?.configurable) return null;
+                                                {isReorderMode ? (
+                                                    // Reorder Mode: Drag and Drop List
+                                                    <div className="max-w-2xl mx-auto">
+                                                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                                                            <div className="flex items-start">
+                                                                <div className="flex-shrink-0">
+                                                                    <ArrowUpDown className="h-5 w-5 text-blue-400" />
+                                                                </div>
+                                                                <div className="ml-3">
+                                                                    <p className="text-sm text-blue-800">
+                                                                        Drag modules up or down to change their order. The first module will be shown first to customers.
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                        </div>
                                                         
-                                                        const config = data.module_configs[moduleId] || {};
-                                                        const isConfigured = Object.keys(config).length > 0;
-                                                        
-                                                        return (
-                                                            <motion.div
-                                                                key={moduleId}
-                                                                whileHover={{ scale: 1.02 }}
-                                                                whileTap={{ scale: 0.98 }}
-                                                                className="cursor-pointer"
-                                                                onClick={() => setSelectedModule(moduleId)}
-                                                            >
-                                                                <Card className="p-6 h-full border-2 hover:border-purple-300 transition-colors">
-                                                                    <div className="flex items-start justify-between mb-4">
-                                                                        <div className="w-12 h-12 rounded-xl bg-purple-100 flex items-center justify-center">
-                                                                            <Settings className="w-6 h-6 text-purple-600" />
+                                                        <div className="space-y-2">
+                                                            {data.enabled_modules.map((moduleId, index) => {
+                                                                const module = moduleDefinitions.find(m => m.id === moduleId);
+                                                                if (!module) return null;
+                                                                
+                                                                return (
+                                                                    <motion.div
+                                                                        key={moduleId}
+                                                                        initial={{ opacity: 0, y: 20 }}
+                                                                        animate={{ opacity: 1, y: 0 }}
+                                                                        transition={{ delay: index * 0.05 }}
+                                                                        draggable
+                                                                        onDragStart={(e) => handleDragStart(e, moduleId)}
+                                                                        onDragOver={handleDragOver}
+                                                                        onDrop={(e) => handleDrop(e, moduleId)}
+                                                                        onDragEnd={handleDragEnd}
+                                                                        className={`
+                                                                            p-4 bg-white border-2 rounded-lg cursor-move transition-all duration-200
+                                                                            ${draggedModule === moduleId 
+                                                                                ? 'border-blue-300 shadow-lg scale-105 opacity-80' 
+                                                                                : 'border-gray-200 hover:border-gray-300 hover:shadow-md'
+                                                                            }
+                                                                        `}
+                                                                    >
+                                                                        <div className="flex items-center">
+                                                                            <div className="flex items-center mr-4">
+                                                                                <ArrowUpDown className="w-5 h-5 text-gray-400" />
+                                                                            </div>
+                                                                            <div className="flex-1 flex items-center justify-between">
+                                                                                <div className="flex items-center">
+                                                                                    <span className="text-sm font-medium text-gray-500 mr-3">
+                                                                                        #{index + 1}
+                                                                                    </span>
+                                                                                    <div>
+                                                                                        <h4 className="font-semibold text-gray-900">{module.name}</h4>
+                                                                                        <p className="text-sm text-gray-500">{module.description}</p>
+                                                                                    </div>
+                                                                                </div>
+                                                                                {module.required && (
+                                                                                    <span className="text-xs bg-amber-100 text-amber-700 px-2 py-1 rounded-full font-medium">
+                                                                                        Required
+                                                                                    </span>
+                                                                                )}
+                                                                            </div>
                                                                         </div>
-                                                                        {isConfigured && (
-                                                                            <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-medium">
-                                                                                ✓ Configured
-                                                                            </span>
-                                                                        )}
-                                                                    </div>
-                                                                    
-                                                                    <h4 className="font-semibold text-gray-900 mb-2">{module.name}</h4>
-                                                                    <p className="text-sm text-gray-600 mb-4">{module.description}</p>
-                                                                    
-                                                                    <div className="flex items-center text-purple-600 text-sm font-medium">
-                                                                        <span>Configure</span>
-                                                                        <ArrowRight className="w-4 h-4 ml-2" />
-                                                                    </div>
-                                                                </Card>
-                                                            </motion.div>
-                                                        );
-                                                    })}
-                                                </div>
+                                                                    </motion.div>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    // Configuration Mode: Grid Layout
+                                                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                                        {data.enabled_modules.map((moduleId) => {
+                                                            const module = moduleDefinitions.find(m => m.id === moduleId);
+                                                            if (!module?.configurable) return null;
+                                                            
+                                                            const config = data.module_configs[moduleId] || {};
+                                                            const isConfigured = Object.keys(config).length > 0;
+                                                            
+                                                            return (
+                                                                <motion.div
+                                                                    key={moduleId}
+                                                                    whileHover={{ scale: 1.02 }}
+                                                                    whileTap={{ scale: 0.98 }}
+                                                                    className="cursor-pointer"
+                                                                    onClick={() => setSelectedModule(moduleId)}
+                                                                >
+                                                                    <Card className="p-6 h-full border-2 hover:border-border/60 transition-colors">
+                                                                        <div className="flex items-start justify-between mb-4">
+                                                                            <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center">
+                                                                                <Settings className="w-6 h-6 text-secondary-foreground" />
+                                                                            </div>
+                                                                            {isConfigured && (
+                                                                                <span className="text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full font-medium">
+                                                                                    ✓ Configured
+                                                                                </span>
+                                                                            )}
+                                                                        </div>
+                                                                        
+                                                                        <h4 className="font-semibold text-gray-900 mb-2">{module.name}</h4>
+                                                                        <p className="text-sm text-gray-600 mb-4">{module.description}</p>
+                                                                        
+                                                                        <div className="flex items-center text-purple-600 text-sm font-medium">
+                                                                            <span>Configure</span>
+                                                                            <ArrowRight className="w-4 h-4 ml-2" />
+                                                                        </div>
+                                                                    </Card>
+                                                                </motion.div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                )}
                                                 
                                                 {data.enabled_modules.filter(moduleId => {
                                                     const module = moduleDefinitions.find(m => m.id === moduleId);
@@ -1386,61 +1722,23 @@ export default function EditAdvancedWidget({ widget }: EditAdvancedWidgetProps) 
                                     </motion.div>
                                 )}
                             </AnimatePresence>
-
-                            {/* Navigation */}
-                            <div className="flex justify-between mt-8 pt-6 border-t">
-                                {currentStep === 3 && selectedModule ? (
-                                    // Special navigation when in module editing mode
-                                    <div className="flex items-center space-x-4">
-                                        <span className="text-sm text-gray-500">Editing module configuration</span>
-                                    </div>
-                                ) : (
-                                    <Button
-                                        variant="outline"
-                                        onClick={prevStep}
-                                        disabled={currentStep === 1}
-                                        className="flex items-center"
-                                    >
-                                        <ArrowLeft className="w-4 h-4 mr-2" />
-                                        Previous
-                                    </Button>
-                                )}
-
-                                <div className="flex space-x-3">
-                                    {currentStep === 3 && selectedModule ? (
-                                        // Save module and return to grid
-                                        <Button
-                                            onClick={() => setSelectedModule(null)}
-                                            className="btn-chalk-gradient flex items-center"
-                                        >
-                                            <Save className="w-4 h-4 mr-2" />
-                                            Save & Close
-                                        </Button>
-                                    ) : currentStep < steps.length ? (
-                                        <Button
-                                            onClick={nextStep}
-                                            disabled={!canProceed()}
-                                            className="btn-chalk-gradient flex items-center"
-                                        >
-                                            Continue
-                                            <ArrowRight className="w-4 h-4 ml-2" />
-                                        </Button>
-                                    ) : (
-                                        <Button
-                                            onClick={handleSubmit}
-                                            disabled={processing || !canProceed()}
-                                            className="btn-chalk-gradient flex items-center"
-                                        >
-                                            {processing ? 'Saving...' : 'Save Changes'}
-                                            <Save className="w-4 h-4 ml-2" />
-                                        </Button>
-                                    )}
-                                </div>
-                            </div>
                         </Card>
                     </motion.div>
                 </div>
             </div>
+
+            {/* Estimate Test Drawer */}
+            <EstimateTestDrawer
+                isOpen={showEstimateTest}
+                onClose={() => setShowEstimateTest(false)}
+                widget={{
+                    id: widget.id,
+                    name: data.name,
+                    enabled_modules: data.enabled_modules,
+                    module_configs: data.module_configs,
+                    pricing: widget.pricing
+                }}
+            />
         </AppLayout>
     );
 }

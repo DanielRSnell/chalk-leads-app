@@ -1,5 +1,5 @@
 [phases.setup]
-nixPkgs = ['nodejs', 'npm', 'sqlite']
+nixPkgs = ['nodejs', 'sqlite']
 
 [phases.install]
 cmds = [

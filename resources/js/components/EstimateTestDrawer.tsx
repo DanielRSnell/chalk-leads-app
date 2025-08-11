@@ -223,6 +223,8 @@ export default function EstimateTestDrawer({ isOpen, onClose, widget, fullScreen
     const [estimate, setEstimate] = useState<EstimateResponse | null>(null);
     const [isCalculating, setIsCalculating] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [leadSubmitting, setLeadSubmitting] = useState(false);
+    const [leadSubmitted, setLeadSubmitted] = useState(false);
     const [widgetConfig, setWidgetConfig] = useState<WidgetConfig | null>(null);
     const [isLoadingConfig, setIsLoadingConfig] = useState(false);
     const [routeData, setRouteData] = useState<any>(null);
@@ -564,6 +566,66 @@ export default function EstimateTestDrawer({ isOpen, onClose, widget, fullScreen
             setError(err instanceof Error ? err.message : 'An error occurred');
         } finally {
             setIsCalculating(false);
+        }
+    };
+
+    const submitLead = async () => {
+        if (!estimate || !widget || leadSubmitting || leadSubmitted) return;
+
+        // Get contact info from responses
+        const contactInfo = responses['contact-info'] || {};
+        
+        // Validate required contact info
+        if (!contactInfo.first_name || !contactInfo.email) {
+            setError('Contact information is required to submit your estimate');
+            return;
+        }
+
+        setLeadSubmitting(true);
+        setError(null);
+
+        try {
+            const response = await fetch(`/api/widget/${widget.widget_key}/leads`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({
+                    contact_info: {
+                        name: `${contactInfo.first_name} ${contactInfo.last_name || ''}`.trim(),
+                        email: contactInfo.email,
+                        phone: contactInfo.phone || null
+                    },
+                    form_responses: responses,
+                    estimate_data: {
+                        breakdown: estimate.breakdown || [],
+                        total_price: estimate.total || estimate.total_price || 0,
+                        subtotal: estimate.subtotal || 0,
+                        tax_amount: estimate.tax_amount || 0,
+                        base_price: estimate.base_price || 0,
+                        currency: estimate.currency || 'USD'
+                    }
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const data = await response.json();
+            
+            if (data.success) {
+                setLeadSubmitted(true);
+                // Optional: show success message or redirect
+            } else {
+                throw new Error(data.message || 'Failed to submit lead');
+            }
+
+        } catch (err) {
+            setError(err instanceof Error ? err.message : 'Failed to submit estimate');
+        } finally {
+            setLeadSubmitting(false);
         }
     };
 
@@ -2206,28 +2268,94 @@ export default function EstimateTestDrawer({ isOpen, onClose, widget, fullScreen
 
                 {/* Action Buttons */}
                 <div className="flex flex-col space-y-4 pt-8 border-t border-border">
-                    <div className="flex justify-center space-x-4">
-                        <Button
-                            onClick={() => {
-                                setEstimate(null);
-                                setCurrentStep(0);
-                                setResponses({});
-                                setError(null);
-                                setWidgetConfig(null);
-                                setRouteData(null);
-                            }}
-                            variant="outline"
-                            size="lg"
-                            className="min-w-[120px]"
-                        >
-                            <Calculator className="w-4 h-4 mr-2" />
-{fullScreen ? 'Start Over' : 'Test Again'}
-                        </Button>
-                        <Button onClick={onClose} size="lg" className="min-w-[120px]">
-                            <CheckCircle className="w-4 h-4 mr-2" />
-                            Done
-                        </Button>
-                    </div>
+                    {fullScreen ? (
+                        // Live preview buttons - focus on lead submission
+                        <div className="space-y-4">
+                            {leadSubmitted ? (
+                                <div className="text-center space-y-4">
+                                    <div className="flex items-center justify-center gap-2 text-green-600">
+                                        <CheckCircle className="w-5 h-5" />
+                                        <span className="font-semibold">Thank you! Your estimate has been submitted.</span>
+                                    </div>
+                                    <p className="text-sm text-muted-foreground">
+                                        We'll be in touch soon to discuss your moving needs.
+                                    </p>
+                                    <Button onClick={onClose} size="lg">
+                                        Close
+                                    </Button>
+                                </div>
+                            ) : (
+                                <div className="space-y-4">
+                                    <div className="text-center">
+                                        <Button
+                                            onClick={submitLead}
+                                            disabled={leadSubmitting || !estimate}
+                                            size="lg"
+                                            className="min-w-[200px]"
+                                        >
+                                            {leadSubmitting ? (
+                                                <>
+                                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                                    Submitting...
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <CheckCircle className="w-4 h-4 mr-2" />
+                                                    Get This Estimate
+                                                </>
+                                            )}
+                                        </Button>
+                                    </div>
+                                    <div className="flex justify-center space-x-4">
+                                        <Button
+                                            onClick={() => {
+                                                setEstimate(null);
+                                                setCurrentStep(0);
+                                                setResponses({});
+                                                setError(null);
+                                                setWidgetConfig(null);
+                                                setRouteData(null);
+                                                setLeadSubmitted(false);
+                                                setLeadSubmitting(false);
+                                            }}
+                                            variant="outline"
+                                            size="sm"
+                                        >
+                                            <Calculator className="w-4 h-4 mr-2" />
+                                            Start Over
+                                        </Button>
+                                        <Button onClick={onClose} variant="ghost" size="sm">
+                                            Close
+                                        </Button>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    ) : (
+                        // Test mode buttons - original functionality
+                        <div className="flex justify-center space-x-4">
+                            <Button
+                                onClick={() => {
+                                    setEstimate(null);
+                                    setCurrentStep(0);
+                                    setResponses({});
+                                    setError(null);
+                                    setWidgetConfig(null);
+                                    setRouteData(null);
+                                }}
+                                variant="outline"
+                                size="lg"
+                                className="min-w-[120px]"
+                            >
+                                <Calculator className="w-4 h-4 mr-2" />
+                                Test Again
+                            </Button>
+                            <Button onClick={onClose} size="lg" className="min-w-[120px]">
+                                <CheckCircle className="w-4 h-4 mr-2" />
+                                Done
+                            </Button>
+                        </div>
+                    )}
                     <div className="flex justify-center">
                         <Button
                             onClick={() => {

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Widget;
+use App\Models\WidgetLead;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
@@ -537,5 +538,95 @@ class PublicEstimateController extends Controller
         }
         
         return $supplies;
+    }
+
+    /**
+     * Submit lead with estimate data (public access)
+     */
+    public function submitLead(Request $request, string $widgetKey): JsonResponse
+    {
+        try {
+            // Find widget
+            $widget = Widget::where('widget_key', $widgetKey)
+                ->whereIn('status', ['active', 'published'])
+                ->first();
+                
+            if (!$widget) {
+                return response()->json([
+                    'error' => 'Widget not found or not published'
+                ], 404);
+            }
+            
+            // Validate request
+            $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
+                'contact_info' => 'required|array',
+                'contact_info.name' => 'required|string|max:255',
+                'contact_info.email' => 'required|email|max:255',
+                'contact_info.phone' => 'nullable|string|max:20',
+                'form_responses' => 'required|array',
+                'estimate_data' => 'required|array',
+                'estimate_data.breakdown' => 'required|array',
+                'estimate_data.total_price' => 'required|numeric|min:0',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'error' => 'Invalid request data',
+                    'details' => $validator->errors()
+                ], 422);
+            }
+
+            $contactInfo = $request->input('contact_info');
+            $formResponses = $request->input('form_responses');
+            $estimateData = $request->input('estimate_data');
+            
+            // Calculate totals from estimate data
+            $totalPrice = $estimateData['total_price'];
+            $subtotal = $estimateData['subtotal'] ?? $totalPrice;
+            $taxAmount = $estimateData['tax_amount'] ?? 0;
+            $basePrice = $estimateData['base_price'] ?? 0;
+            
+            // Create the lead
+            $lead = WidgetLead::create([
+                'widget_id' => $widget->id,
+                'contact_info' => $contactInfo,
+                'form_responses' => $formResponses,
+                'estimate_breakdown' => $estimateData['breakdown'],
+                'base_price' => $basePrice,
+                'subtotal' => $subtotal,
+                'tax_amount' => $taxAmount,
+                'total_price' => $totalPrice,
+                'currency' => $estimateData['currency'] ?? 'USD',
+                'estimated_value' => $totalPrice, // Legacy field
+                'lead_data' => [
+                    'widget_name' => $widget->name,
+                    'submitted_at' => now()->toISOString(),
+                    'user_agent' => $request->userAgent(),
+                ], // Legacy field
+                'source_url' => $request->headers->get('referer'),
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+                'status' => 'new'
+            ]);
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Lead submitted successfully',
+                'lead_id' => $lead->id,
+                'data' => [
+                    'contact_name' => $lead->getContactName(),
+                    'total_estimate' => $lead->getFormattedTotal(),
+                    'submitted_at' => $lead->created_at->toISOString()
+                ]
+            ]);
+            
+        } catch (\Exception $e) {
+            \Log::error('Lead submission error: ' . $e->getMessage());
+            
+            return response()->json([
+                'error' => 'Failed to submit lead',
+                'message' => 'Please try again later'
+            ], 500);
+        }
     }
 }

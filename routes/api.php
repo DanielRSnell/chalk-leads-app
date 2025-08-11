@@ -16,6 +16,8 @@ Route::prefix('widget')->group(function () {
         ->name('api.widget.config');
     Route::post('{widgetKey}/estimate', [PublicEstimateController::class, 'calculate'])
         ->name('api.public.widget.estimate');
+    Route::post('{widgetKey}/leads', [PublicEstimateController::class, 'submitLead'])
+        ->name('api.public.widget.leads');
 });
 
 // Protected user API (authentication required)

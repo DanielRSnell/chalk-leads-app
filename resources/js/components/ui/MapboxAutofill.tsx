@@ -70,7 +70,7 @@ export function MapboxAutofill({
     const testLaravelAPI = async () => {
       try {
         console.log('🧪 Testing Laravel Mapbox API endpoint...');
-        const testUrl = `/api/user/mapbox/suggest?q=new%20york&limit=1`;
+        const testUrl = `/api/mapbox/suggest?q=new%20york&limit=1`;
         
         console.log('🌐 API URL:', testUrl);
         
@@ -108,7 +108,7 @@ export function MapboxAutofill({
     setIsLoading(true);
     
     try {
-      const url = `/api/user/mapbox/suggest?q=${encodeURIComponent(query)}&types=address&country=US&limit=5`;
+      const url = `/api/mapbox/suggest?q=${encodeURIComponent(query)}&types=address&country=US&limit=5`;
       
       console.log('🔍 Fetching suggestions from:', url);
       

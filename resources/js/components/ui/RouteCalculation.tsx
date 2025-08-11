@@ -53,7 +53,7 @@ export function RouteCalculation({ pickupAddress, destinationAddress, onComplete
     try {
       console.log('🗺️ Calculating route from:', pickupAddress, 'to:', destinationAddress);
       
-      const url = `/api/user/mapbox/directions?pickup=${encodeURIComponent(pickupAddress)}&destination=${encodeURIComponent(destinationAddress)}`;
+      const url = `/api/mapbox/directions?pickup=${encodeURIComponent(pickupAddress)}&destination=${encodeURIComponent(destinationAddress)}`;
       
       console.log('🔍 Fetching route from:', url);
       

@@ -14,6 +14,7 @@ export default defineConfig({
         react(),
         tailwindcss(),
     ],
+    // Force rebuild with updated Mapbox endpoints
     esbuild: {
         jsx: 'automatic',
     },

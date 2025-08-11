@@ -20,9 +20,10 @@ interface LivePreviewProps {
             name: string;
         };
     };
+    fullScreen?: boolean;
 }
 
-export default function LivePreview({ widget }: LivePreviewProps) {
+export default function LivePreview({ widget, fullScreen = false }: LivePreviewProps) {
     const [isDrawerOpen, setIsDrawerOpen] = useState(true);
 
     return (
@@ -157,6 +158,7 @@ export default function LivePreview({ widget }: LivePreviewProps) {
                                     isOpen={true}
                                     onClose={() => setIsDrawerOpen(false)}
                                     widget={widget}
+                                    fullScreen={fullScreen}
                                 />
                             </div>
                         </div>

@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\WidgetConfigController;
 use App\Http\Controllers\Api\EstimateController;
 use App\Http\Controllers\Api\MapboxController;
 use App\Http\Controllers\WidgetLivePreviewController;
+use App\Http\Controllers\PublicEstimateController;
 
 // Simple health check route with debug info
 Route::get('/health', function () {
@@ -197,7 +198,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 });
 
 // Public widget live preview route (no auth required, for iframe embedding)
-Route::get('widgets/{widget}/live', [WidgetLivePreviewController::class, 'show'])
+// Supports both widget ID and widget key for backward compatibility
+Route::get('widgets/{identifier}/live', [WidgetLivePreviewController::class, 'show'])
     ->name('widgets.live.public');
 
 // Public Mapbox API routes (no authentication required)
@@ -208,11 +210,6 @@ Route::prefix('api/mapbox')->group(function () {
         ->name('api.public.mapbox.directions');
 });
 
-// Public widget estimate endpoint (no middleware at all)
-Route::withoutMiddleware()->group(function () {
-    Route::post('api/widget/{widgetKey}/estimate', [EstimateController::class, 'calculatePublic'])
-        ->name('api.public.widget.estimate.web');
-});
 
 
 // Web-based API endpoints for widget testing

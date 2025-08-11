@@ -550,7 +550,16 @@ export default function EstimateTestDrawer({ isOpen, onClose, widget, fullScreen
             }
 
             const data = await response.json();
-            setEstimate(data);
+            // Handle different API response formats
+            if (data.success && data.estimate) {
+                // New public API format
+                setEstimate(data.estimate);
+            } else if (data.breakdown) {
+                // Old API format
+                setEstimate(data);
+            } else {
+                throw new Error('Invalid estimate response format');
+            }
         } catch (err) {
             setError(err instanceof Error ? err.message : 'An error occurred');
         } finally {
@@ -1579,18 +1588,19 @@ export default function EstimateTestDrawer({ isOpen, onClose, widget, fullScreen
         const moveDetails = getMoveDetails();
         
         // Calculate estimated duration based on total price (rough estimate)
-        const estimatedHours = Math.max(2, Math.round(estimate.total_price / 200));
+        const estimatedHours = Math.max(2, Math.round((estimate.total || estimate.total_price || 0) / 200));
 
         // Categorize breakdown items more precisely
-        const baseItems = estimate.breakdown.filter((item: any) => item.type === 'base');
-        const adjustments = estimate.breakdown.filter((item: any) => item.type === 'adjustment');
-        const challenges = estimate.breakdown.filter((item: any) => item.type === 'challenge' || item.type === 'discount');
-        const travel = estimate.breakdown.filter((item: any) => item.type === 'travel');
-        const additionalServices = estimate.breakdown.filter((item: any) => item.type === 'additional');
-        const supplies = estimate.breakdown.filter((item: any) => item.type === 'supply' || item.type === 'supplies');
-        const taxes = estimate.breakdown.filter((item: any) => item.type === 'tax');
+        const breakdown = estimate.breakdown || [];
+        const baseItems = breakdown.filter((item: any) => item.type === 'base');
+        const adjustments = breakdown.filter((item: any) => item.type === 'adjustment');
+        const challenges = breakdown.filter((item: any) => item.type === 'challenge' || item.type === 'discount');
+        const travel = breakdown.filter((item: any) => item.type === 'travel');
+        const additionalServices = breakdown.filter((item: any) => item.type === 'additional');
+        const supplies = breakdown.filter((item: any) => item.type === 'supply' || item.type === 'supplies');
+        const taxes = breakdown.filter((item: any) => item.type === 'tax');
         
-        const subtotal = estimate.breakdown
+        const subtotal = breakdown
             .filter((item: any) => item.type !== 'tax')
             .reduce((sum: number, item: any) => sum + item.price, 0);
         const taxTotal = taxes.reduce((sum: number, item: any) => sum + item.price, 0);
@@ -1609,7 +1619,7 @@ export default function EstimateTestDrawer({ isOpen, onClose, widget, fullScreen
                         </div>
                         <div>
                             <p className="text-sm text-muted-foreground">Total Estimate</p>
-                            <h2 className="text-3xl font-bold text-primary">${estimate.total_price.toLocaleString()}</h2>
+                            <h2 className="text-3xl font-bold text-primary">${(estimate.total || estimate.total_price || 0).toLocaleString()}</h2>
                         </div>
                     </div>
                     
@@ -1903,7 +1913,7 @@ export default function EstimateTestDrawer({ isOpen, onClose, widget, fullScreen
                                 )}
                                 <TableRow className="bg-primary/5">
                                     <TableCell colSpan={2} className="font-bold text-xl text-primary px-2">Total Amount</TableCell>
-                                    <TableCell className="text-right font-bold text-xl text-primary px-2">${estimate.total_price.toLocaleString()}</TableCell>
+                                    <TableCell className="text-right font-bold text-xl text-primary px-2">${(estimate.total || estimate.total_price || 0).toLocaleString()}</TableCell>
                                 </TableRow>
                             </TableFooter>
                         </Table>
@@ -2037,7 +2047,7 @@ export default function EstimateTestDrawer({ isOpen, onClose, widget, fullScreen
                             className="min-w-[120px]"
                         >
                             <Calculator className="w-4 h-4 mr-2" />
-                            Test Again
+{fullScreen ? 'Start Over' : 'Test Again'}
                         </Button>
                         <Button onClick={onClose} size="lg" className="min-w-[120px]">
                             <CheckCircle className="w-4 h-4 mr-2" />
@@ -2106,7 +2116,7 @@ export default function EstimateTestDrawer({ isOpen, onClose, widget, fullScreen
 
                         {estimate ? (
                             <div className="space-y-6">
-                                {renderEstimate()}
+                                {renderEstimateResults()}
                             </div>
                         ) : (
                             <div className="space-y-6">
@@ -2164,7 +2174,7 @@ export default function EstimateTestDrawer({ isOpen, onClose, widget, fullScreen
                             <Calculator className="w-5 h-5 text-white" />
                         </div>
                         <div>
-                            <SheetTitle>Test Estimate</SheetTitle>
+                            <SheetTitle>{fullScreen ? `Get Your ${widget.company_name} Estimate` : 'Test Estimate'}</SheetTitle>
                             <SheetDescription>{widget.name}</SheetDescription>
                         </div>
                     </div>
@@ -2412,7 +2422,7 @@ export default function EstimateTestDrawer({ isOpen, onClose, widget, fullScreen
                             <div className="text-center">
                                 <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-primary" />
                                 <h3 className="text-lg font-semibold mb-2">Loading Configuration</h3>
-                                <p className="text-muted-foreground">Preparing your widget for testing...</p>
+                                <p className="text-muted-foreground">{fullScreen ? 'Preparing your estimate...' : 'Preparing your widget for testing...'}</p>
                             </div>
                         </div>
                     ) : currentStepConfig ? (
@@ -2420,7 +2430,7 @@ export default function EstimateTestDrawer({ isOpen, onClose, widget, fullScreen
                     ) : (
                         <div className="text-center py-12">
                             <FileText className="w-8 h-8 mx-auto mb-4 text-muted-foreground" />
-                            <p className="text-muted-foreground">No steps configured for testing.</p>
+                            <p className="text-muted-foreground">{fullScreen ? 'No estimate steps available.' : 'No steps configured for testing.'}</p>
                         </div>
                     )}
                 </div>

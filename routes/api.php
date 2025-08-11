@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\WidgetConfigController;
 use App\Http\Controllers\Api\EstimateController;
+use App\Http\Controllers\PublicEstimateController;
 use Illuminate\Support\Facades\Route;
 
 // Test route
@@ -13,6 +14,8 @@ Route::get('/test', function () {
 Route::prefix('widget')->group(function () {
     Route::get('{widgetKey}/config', [WidgetConfigController::class, 'show'])
         ->name('api.widget.config');
+    Route::post('{widgetKey}/estimate', [PublicEstimateController::class, 'calculate'])
+        ->name('api.public.widget.estimate');
 });
 
 // Protected user API (authentication required)

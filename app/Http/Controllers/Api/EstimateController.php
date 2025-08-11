@@ -508,4 +508,22 @@ class EstimateController extends Controller
         
         return $supplies;
     }
+
+    /**
+     * Calculate estimate for a widget using widget key (public access)
+     */
+    public function calculatePublic(Request $request, string $widgetKey)
+    {
+        // Find widget by widget_key
+        $widget = Widget::where('widget_key', $widgetKey)
+            ->whereIn('status', ['active', 'published'])
+            ->first();
+            
+        if (!$widget) {
+            return response()->json(['error' => 'Widget not found or not published'], 404);
+        }
+        
+        // Use the existing calculate method logic
+        return $this->calculate($request, $widget);
+    }
 }

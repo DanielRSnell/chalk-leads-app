@@ -522,15 +522,26 @@ export default function EstimateTestDrawer({ isOpen, onClose, widget, fullScreen
         setError(null);
 
         try {
-            const response = await fetch(`/api/user/widgets/${widget.id}/estimate`, {
+            // Use public API for fullscreen widgets, authenticated API for preview mode
+            const apiUrl = fullScreen 
+                ? `/api/widget/${widget.widget_key}/estimate`
+                : `/api/user/widgets/${widget.id}/estimate`;
+
+            const headers: Record<string, string> = {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            };
+
+            // Only add CSRF token for authenticated requests
+            if (!fullScreen) {
+                headers['X-CSRF-TOKEN'] = document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content || '';
+            }
+
+            const response = await fetch(apiUrl, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Accept': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]')?.content || '',
-                    'X-Requested-With': 'XMLHttpRequest'
-                },
-                credentials: 'same-origin',
+                headers,
+                credentials: fullScreen ? 'omit' : 'same-origin',
                 body: JSON.stringify({ responses }),
             });
 

@@ -7,9 +7,24 @@ use App\Http\Controllers\Api\EstimateController;
 use App\Http\Controllers\Api\MapboxController;
 use App\Http\Controllers\WidgetLivePreviewController;
 
-// Simple health check route
+// Simple health check route with debug info
 Route::get('/health', function () {
-    return response()->json(['status' => 'ok', 'timestamp' => now()]);
+    $buildPath = public_path('build');
+    $manifestPath = public_path('build/manifest.json');
+    
+    return response()->json([
+        'status' => 'ok',
+        'timestamp' => now(),
+        'debug' => [
+            'build_dir_exists' => is_dir($buildPath),
+            'manifest_exists' => file_exists($manifestPath),
+            'build_contents' => is_dir($buildPath) ? array_slice(scandir($buildPath), 2) : null,
+            'public_contents' => array_slice(scandir(public_path()), 2),
+            'vite_manifest' => file_exists($manifestPath) ? 'exists' : 'missing',
+            'app_env' => config('app.env'),
+            'app_debug' => config('app.debug')
+        ]
+    ]);
 });
 
 Route::get('/', function () {

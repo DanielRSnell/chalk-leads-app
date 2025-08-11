@@ -208,9 +208,11 @@ Route::prefix('api/mapbox')->group(function () {
         ->name('api.public.mapbox.directions');
 });
 
-// Public widget estimate endpoint (no authentication required)
-Route::post('api/widget/{widgetKey}/estimate', [EstimateController::class, 'calculatePublic'])
-    ->name('api.public.widget.estimate.web');
+// Public widget estimate endpoint (no middleware at all)
+Route::withoutMiddleware()->group(function () {
+    Route::post('api/widget/{widgetKey}/estimate', [EstimateController::class, 'calculatePublic'])
+        ->name('api.public.widget.estimate.web');
+});
 
 
 // Web-based API endpoints for widget testing

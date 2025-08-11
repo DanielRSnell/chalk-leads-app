@@ -11,6 +11,7 @@ use App\Http\Controllers\WidgetLivePreviewController;
 Route::get('/health', function () {
     $buildPath = public_path('build');
     $manifestPath = public_path('build/manifest.json');
+    $assetsPath = public_path('build/assets');
     
     return response()->json([
         'status' => 'ok',
@@ -19,10 +20,12 @@ Route::get('/health', function () {
             'build_dir_exists' => is_dir($buildPath),
             'manifest_exists' => file_exists($manifestPath),
             'build_contents' => is_dir($buildPath) ? array_slice(scandir($buildPath), 2) : null,
+            'assets_contents' => is_dir($assetsPath) ? array_slice(scandir($assetsPath), 2, 10) : null, // First 10 files
             'public_contents' => array_slice(scandir(public_path()), 2),
-            'vite_manifest' => file_exists($manifestPath) ? 'exists' : 'missing',
+            'vite_manifest' => file_exists($manifestPath) ? json_decode(file_get_contents($manifestPath), true) : 'missing',
             'app_env' => config('app.env'),
-            'app_debug' => config('app.debug')
+            'app_debug' => config('app.debug'),
+            'vite_hot_file' => file_exists(public_path('hot')) ? file_get_contents(public_path('hot')) : 'not found'
         ]
     ]);
 });

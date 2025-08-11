@@ -12,8 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            // Update role column to include system_admin option
-            $table->string('role')->default('user')->change(); // admin, user, system_admin
+            // Add role column if it doesn't exist
+            if (!Schema::hasColumn('users', 'role')) {
+                $table->string('role')->default('user')->after('password'); // admin, user, system_admin
+            }
         });
     }
 

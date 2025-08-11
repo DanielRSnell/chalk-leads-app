@@ -200,6 +200,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
 Route::get('widgets/{widget}/live', [WidgetLivePreviewController::class, 'show'])
     ->name('widgets.live.public');
 
+// Public Mapbox API routes (no authentication required)
+Route::prefix('api/mapbox')->group(function () {
+    Route::get('suggest', [MapboxController::class, 'getAddressSuggestions'])
+        ->name('api.public.mapbox.suggest');
+    Route::get('directions', [MapboxController::class, 'getRouteDirections'])
+        ->name('api.public.mapbox.directions');
+});
+
 // Web-based API endpoints for widget testing
 Route::middleware(['auth'])->prefix('api/user')->group(function () {
     Route::get('widgets/{widget}/config', [WidgetConfigController::class, 'showForUser'])

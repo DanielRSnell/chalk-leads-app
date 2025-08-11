@@ -375,6 +375,10 @@ export function MapboxAutofill({
             onBlur={handleBlur}
             placeholder={placeholder}
             autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="off"
+            spellCheck="false"
+            data-form-type="other"
             aria-expanded={showSuggestions}
             aria-haspopup="listbox"
             aria-activedescendant={activeSuggestion >= 0 ? `suggestion-${activeSuggestion}` : undefined}

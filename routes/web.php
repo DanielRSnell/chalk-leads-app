@@ -7,6 +7,11 @@ use App\Http\Controllers\Api\EstimateController;
 use App\Http\Controllers\Api\MapboxController;
 use App\Http\Controllers\WidgetLivePreviewController;
 
+// Simple health check route
+Route::get('/health', function () {
+    return response()->json(['status' => 'ok', 'timestamp' => now()]);
+});
+
 Route::get('/', function () {
     // If user is already authenticated, redirect to dashboard
     if (auth()->check()) {

@@ -8,8 +8,6 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('widget')->group(function () {
     Route::get('{widgetKey}/config', [WidgetConfigController::class, 'show'])
         ->name('api.widget.config');
-    Route::post('{widgetKey}/estimate', [EstimateController::class, 'calculatePublic'])
-        ->name('api.widget.estimate');
 });
 
 // Protected user API (authentication required)

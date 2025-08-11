@@ -208,6 +208,12 @@ Route::prefix('api/mapbox')->group(function () {
         ->name('api.public.mapbox.directions');
 });
 
+// Public widget estimate API (no authentication required)
+Route::prefix('api/widget')->group(function () {
+    Route::post('{widgetKey}/estimate', [EstimateController::class, 'calculatePublic'])
+        ->name('api.public.widget.estimate');
+});
+
 // Web-based API endpoints for widget testing
 Route::middleware(['auth'])->prefix('api/user')->group(function () {
     Route::get('widgets/{widget}/config', [WidgetConfigController::class, 'showForUser'])

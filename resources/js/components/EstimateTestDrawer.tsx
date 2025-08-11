@@ -1673,8 +1673,181 @@ export default function EstimateTestDrawer({ isOpen, onClose, widget, fullScreen
                         </div>
                     </div>
                     
-                    <div className="">
-                        <Table>
+                    {fullScreen ? (
+                        // Mobile-friendly card layout for live preview
+                        <div className="space-y-4">
+                            {/* Base Services */}
+                            {baseItems.length > 0 && (
+                                <Card>
+                                    <div className="p-4 space-y-3">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                                            <h4 className="font-semibold text-blue-800">Base Service</h4>
+                                        </div>
+                                        {baseItems.map((item: any, index: number) => (
+                                            <div key={`base-${index}`} className="flex justify-between items-start">
+                                                <div className="flex-1">
+                                                    <div className="font-medium">{item.item}</div>
+                                                    {item.description && (
+                                                        <div className="text-sm text-muted-foreground mt-1">{item.description}</div>
+                                                    )}
+                                                </div>
+                                                <div className="font-semibold text-blue-700">${item.price.toLocaleString()}</div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </Card>
+                            )}
+
+                            {/* Service Adjustments */}
+                            {adjustments.length > 0 && (
+                                <Card>
+                                    <div className="p-4 space-y-3">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
+                                            <h4 className="font-semibold text-purple-800">Service Adjustments</h4>
+                                        </div>
+                                        {adjustments.map((item: any, index: number) => (
+                                            <div key={`adjustment-${index}`} className="flex justify-between items-start">
+                                                <div className="flex-1">
+                                                    <div className="font-medium">{item.item}</div>
+                                                    {item.description && (
+                                                        <div className="text-sm text-muted-foreground mt-1">{item.description}</div>
+                                                    )}
+                                                </div>
+                                                <div className="font-semibold text-purple-700">
+                                                    {item.price >= 0 ? '+' : ''}${item.price.toLocaleString()}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </Card>
+                            )}
+
+                            {/* Challenges & Complications */}
+                            {challenges.length > 0 && (
+                                <Card>
+                                    <div className="p-4 space-y-3">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-3 h-3 bg-orange-500 rounded-full"></div>
+                                            <h4 className="font-semibold text-orange-800">Challenges & Complications</h4>
+                                        </div>
+                                        {challenges.map((item: any, index: number) => (
+                                            <div key={`challenge-${index}`} className="flex justify-between items-start">
+                                                <div className="flex-1">
+                                                    <div className="font-medium">{item.item}</div>
+                                                    {item.description && (
+                                                        <div className="text-sm text-muted-foreground mt-1">{item.description}</div>
+                                                    )}
+                                                </div>
+                                                <div className={`font-semibold ${
+                                                    item.type === 'discount' ? 'text-green-700' : 'text-orange-700'
+                                                }`}>
+                                                    {item.price >= 0 ? '+' : ''}${item.price.toLocaleString()}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </Card>
+                            )}
+
+                            {/* Travel Costs */}
+                            {travel.length > 0 && (
+                                <Card>
+                                    <div className="p-4 space-y-3">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-3 h-3 bg-indigo-500 rounded-full"></div>
+                                            <h4 className="font-semibold text-indigo-800">Travel Distance</h4>
+                                        </div>
+                                        {travel.map((item: any, index: number) => (
+                                            <div key={`travel-${index}`} className="flex justify-between items-start">
+                                                <div className="flex-1">
+                                                    <div className="font-medium">{item.item}</div>
+                                                    {item.description && (
+                                                        <div className="text-sm text-muted-foreground mt-1">{item.description}</div>
+                                                    )}
+                                                </div>
+                                                <div className="font-semibold text-indigo-700">+${item.price.toLocaleString()}</div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </Card>
+                            )}
+
+                            {/* Add-on Services */}
+                            {additionalServices.length > 0 && (
+                                <Card>
+                                    <div className="p-4 space-y-3">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-3 h-3 bg-emerald-500 rounded-full"></div>
+                                            <h4 className="font-semibold text-emerald-800">Add-on Services</h4>
+                                        </div>
+                                        {additionalServices.map((item: any, index: number) => (
+                                            <div key={`additional-${index}`} className="flex justify-between items-start">
+                                                <div className="flex-1">
+                                                    <div className="font-medium">{item.item}</div>
+                                                    {item.description && (
+                                                        <div className="text-sm text-muted-foreground mt-1">{item.description}</div>
+                                                    )}
+                                                </div>
+                                                <div className="font-semibold text-emerald-700">+${item.price.toLocaleString()}</div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </Card>
+                            )}
+
+                            {/* Moving Supplies */}
+                            {supplies.length > 0 && (
+                                <Card>
+                                    <div className="p-4 space-y-3">
+                                        <div className="flex items-center gap-2">
+                                            <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                                            <h4 className="font-semibold text-yellow-800">Moving Supplies</h4>
+                                        </div>
+                                        {supplies.map((item: any, index: number) => (
+                                            <div key={`supply-${index}`} className="flex justify-between items-start">
+                                                <div className="flex-1">
+                                                    <div className="font-medium">{item.item}</div>
+                                                    {item.description && (
+                                                        <div className="text-sm text-muted-foreground mt-1">{item.description}</div>
+                                                    )}
+                                                </div>
+                                                <div className="font-semibold text-yellow-700">+${item.price.toLocaleString()}</div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </Card>
+                            )}
+
+                            {/* Totals */}
+                            <Card>
+                                <div className="p-4 space-y-3">
+                                    <div className="flex justify-between items-center">
+                                        <span className="font-semibold text-lg">Subtotal</span>
+                                        <span className="font-semibold text-lg">${subtotal.toLocaleString()}</span>
+                                    </div>
+                                    {taxTotal > 0 && (
+                                        <div className="flex justify-between items-center">
+                                            <div className="flex items-center gap-2">
+                                                <Percent className="w-4 h-4 text-muted-foreground" />
+                                                <span className="font-medium">Tax (8.0%)</span>
+                                            </div>
+                                            <span className="font-semibold">${taxTotal.toLocaleString()}</span>
+                                        </div>
+                                    )}
+                                    <Separator />
+                                    <div className="flex justify-between items-center">
+                                        <span className="font-bold text-xl text-primary">Total Amount</span>
+                                        <span className="font-bold text-xl text-primary">${(estimate.total || estimate.total_price || 0).toLocaleString()}</span>
+                                    </div>
+                                </div>
+                            </Card>
+                        </div>
+                    ) : (
+                        // Desktop table layout for test drawer
+                        <div className="">
+                            <Table>
                             <TableHeader>
                                 <TableRow>
                                     <TableHead className="w-[50%]">Service</TableHead>
@@ -1917,7 +2090,8 @@ export default function EstimateTestDrawer({ isOpen, onClose, widget, fullScreen
                                 </TableRow>
                             </TableFooter>
                         </Table>
-                    </div>
+                        </div>
+                    )}
                 </Card>
 
                 {/* Move Details */}

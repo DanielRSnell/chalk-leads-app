@@ -514,25 +514,113 @@ class EstimateController extends Controller
      */
     public function calculatePublic(Request $request, string $widgetKey)
     {
-        \Log::info('Public estimate request', [
-            'widget_key' => $widgetKey,
-            'method' => $request->method(),
-            'url' => $request->url()
-        ]);
-        
-        // Find widget by widget_key
-        $widget = Widget::where('widget_key', $widgetKey)
-            ->whereIn('status', ['active', 'published'])
-            ->first();
+        try {
+            \Log::info('Public estimate request', [
+                'widget_key' => $widgetKey,
+                'method' => $request->method(),
+                'url' => $request->url(),
+                'has_responses' => $request->has('responses')
+            ]);
             
-        if (!$widget) {
-            \Log::error('Widget not found', ['widget_key' => $widgetKey]);
-            return response()->json(['error' => 'Widget not found or not published'], 404);
+            // Find widget by widget_key
+            $widget = Widget::where('widget_key', $widgetKey)
+                ->whereIn('status', ['active', 'published'])
+                ->first();
+                
+            if (!$widget) {
+                \Log::error('Widget not found', ['widget_key' => $widgetKey]);
+                return response()->json([
+                    'error' => 'Widget not found or not published',
+                    'widget_key' => $widgetKey
+                ], 404);
+            }
+            
+            \Log::info('Widget found', ['widget_id' => $widget->id, 'status' => $widget->status]);
+            
+            // Validate request
+            $validator = Validator::make($request->all(), [
+                'responses' => 'required|array',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'error' => 'Invalid request data',
+                    'details' => $validator->errors()
+                ], 422);
+            }
+            
+            // Use the existing calculate method logic but bypass auth checks
+            $responses = $request->input('responses', []);
+            
+            // Get widget configuration
+            $widgetConfig = $this->getWidgetConfiguration($widget);
+            if (!$widgetConfig) {
+                return response()->json(['error' => 'Widget configuration not found'], 404);
+            }
+            
+            $stepsData = $widgetConfig['steps_data'] ?? [];
+            
+            // Calculate estimate
+            $basePrice = $this->getBasePrice($responses, $stepsData);
+            $totalPrice = $basePrice;
+            $breakdown = [];
+            
+            // Add base service to breakdown
+            $breakdown[] = [
+                'item' => 'Base Service',
+                'description' => $this->getServiceDescription($responses, $stepsData),
+                'price' => $basePrice,
+                'type' => 'base'
+            ];
+            
+            // Apply service selection multipliers
+            $totalPrice = $this->applyServiceSelection($responses, $stepsData, $totalPrice);
+            
+            // Apply location challenges
+            $totalPrice = $this->applyLocationChallenges($responses, $stepsData, $totalPrice, $breakdown);
+            
+            // Add distance calculation
+            $totalPrice = $this->addDistanceCalculation($responses, $stepsData, $totalPrice, $breakdown);
+            
+            // Add additional services
+            $additionalServices = $this->calculateAdditionalServices($responses, $stepsData, $totalPrice);
+            $breakdown = array_merge($breakdown, $additionalServices);
+            $totalPrice += array_sum(array_column($additionalServices, 'price'));
+            
+            // Add supplies
+            $supplies = $this->calculateSupplies($responses, $stepsData);
+            $breakdown = array_merge($breakdown, $supplies);
+            $totalPrice += array_sum(array_column($supplies, 'price'));
+            
+            // Apply tax
+            $settings = $widget->settings ?? [];
+            $taxRate = $settings['tax_rate'] ?? 0.08;
+            $subtotal = $totalPrice;
+            $tax = $subtotal * $taxRate;
+            $totalPrice += $tax;
+            
+            return response()->json([
+                'success' => true,
+                'estimate' => [
+                    'subtotal' => round($subtotal, 2),
+                    'tax_rate' => $taxRate,
+                    'tax_amount' => round($tax, 2),
+                    'total' => round($totalPrice, 2),
+                    'breakdown' => $breakdown
+                ]
+            ]);
+            
+        } catch (\Exception $e) {
+            \Log::error('Public estimate calculation error', [
+                'widget_key' => $widgetKey,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'error' => 'Failed to calculate estimate',
+                'message' => $e->getMessage()
+            ], 500);
         }
-        
-        \Log::info('Widget found', ['widget_id' => $widget->id, 'status' => $widget->status]);
-        
-        // Use the existing calculate method logic
-        return $this->calculate($request, $widget);
     }
 }

@@ -514,14 +514,23 @@ class EstimateController extends Controller
      */
     public function calculatePublic(Request $request, string $widgetKey)
     {
+        \Log::info('Public estimate request', [
+            'widget_key' => $widgetKey,
+            'method' => $request->method(),
+            'url' => $request->url()
+        ]);
+        
         // Find widget by widget_key
         $widget = Widget::where('widget_key', $widgetKey)
             ->whereIn('status', ['active', 'published'])
             ->first();
             
         if (!$widget) {
+            \Log::error('Widget not found', ['widget_key' => $widgetKey]);
             return response()->json(['error' => 'Widget not found or not published'], 404);
         }
+        
+        \Log::info('Widget found', ['widget_id' => $widget->id, 'status' => $widget->status]);
         
         // Use the existing calculate method logic
         return $this->calculate($request, $widget);

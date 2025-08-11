@@ -4,6 +4,11 @@ use App\Http\Controllers\Api\WidgetConfigController;
 use App\Http\Controllers\Api\EstimateController;
 use Illuminate\Support\Facades\Route;
 
+// Test route
+Route::get('/test', function () {
+    return response()->json(['message' => 'API routes working']);
+});
+
 // Public widget API (no authentication required)
 Route::prefix('widget')->group(function () {
     Route::get('{widgetKey}/config', [WidgetConfigController::class, 'show'])

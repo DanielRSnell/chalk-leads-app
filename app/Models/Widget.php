@@ -27,7 +27,7 @@ class Widget extends Model
 
     protected $casts = [
         'enabled_modules' => 'array',
-        'module_configs' => 'array',
+        'module_configs' => 'array', 
         'branding' => 'array',
         'settings' => 'array',
         'pricing' => 'array',

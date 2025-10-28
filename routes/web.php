@@ -47,12 +47,12 @@ Route::get('/', function () {
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', function () {
         $user = auth()->user();
-        
+
         // Redirect system administrators to Filament admin panel
         if ($user->isSystemAdmin()) {
             return redirect('/admin');
         }
-        
+
         // Regular users see only their company's data
         if (!$user->company) {
             // User has no company assigned, show empty dashboard
@@ -69,11 +69,11 @@ Route::middleware(['auth', 'verified'])->group(function () {
                 'error' => 'No company assigned to your account. Please contact an administrator.',
             ]);
         }
-        
+
         $widgets = $user->company->widgets()->latest()->take(5)->get();
         $widgetCount = $user->company->widgets()->count();
         $leadCount = $user->company->widgets()->withCount('leads')->get()->sum('leads_count');
-        
+
         return Inertia::render('chalk-dashboard', [
             'user' => [
                 'name' => $user->name,
@@ -92,8 +92,138 @@ Route::middleware(['auth', 'verified'])->group(function () {
             'leadCount' => $leadCount,
         ]);
     })->name('dashboard');
-    
+
     // Widget management routes
+    Route::get('widgets', function () {
+        $user = auth()->user();
+
+        // Redirect system administrators to Filament admin panel
+        if ($user->isSystemAdmin()) {
+            return redirect('/admin');
+        }
+
+        // Regular users see only their company's widgets
+        if (!$user->company) {
+            return Inertia::render('widgets/index', [
+                'widgets' => [],
+            ]);
+        }
+
+        $widgets = $user->company->widgets()->latest()->get();
+
+        return Inertia::render('widgets/index', [
+            'widgets' => $widgets->map(fn($widget) => [
+                'id' => $widget->id,
+                'name' => $widget->name,
+                'widget_key' => $widget->widget_key,
+                'status' => $widget->status,
+                'service_category' => $widget->service_category,
+                'created_at' => $widget->created_at->format('M j, Y'),
+            ]),
+        ]);
+    })->name('widgets.index');
+
+    // Leads management routes
+    Route::get('leads', function () {
+        $user = auth()->user();
+
+        // Redirect system administrators to Filament admin panel
+        if ($user->isSystemAdmin()) {
+            return redirect('/admin');
+        }
+
+        // Regular users see only their company's leads
+        if (!$user->company) {
+            return Inertia::render('leads/index', [
+                'leads' => [],
+            ]);
+        }
+
+        // Get all leads from the company's widgets
+        $leads = \App\Models\WidgetLead::whereHas('widget', function ($query) use ($user) {
+            $query->where('company_id', $user->company_id);
+        })
+        ->with('widget:id,name')
+        ->latest()
+        ->get();
+
+        return Inertia::render('leads/index', [
+            'leads' => $leads->map(fn($lead) => [
+                'id' => $lead->id,
+                'contact_name' => $lead->getContactName(),
+                'contact_email' => $lead->getContactEmail(),
+                'contact_phone' => $lead->getContactPhone(),
+                'widget_name' => $lead->widget->name ?? 'Unknown',
+                'widget_id' => $lead->widget_id,
+                'total_price' => $lead->total_price,
+                'formatted_total' => $lead->getFormattedTotal(),
+                'status' => $lead->status,
+                'created_at' => $lead->created_at->format('M j, Y g:i A'),
+            ]),
+        ]);
+    })->name('leads.index');
+
+    Route::get('leads/{lead}', function (\App\Models\WidgetLead $lead) {
+        $user = auth()->user();
+
+        // Redirect system administrators to Filament admin panel
+        if ($user->isSystemAdmin()) {
+            return redirect('/admin');
+        }
+
+        // Authorization check - users can only view their company's leads
+        if ($lead->widget->company_id !== $user->company_id) {
+            abort(403);
+        }
+
+        return Inertia::render('leads/show', [
+            'lead' => [
+                'id' => $lead->id,
+                'contact_name' => $lead->getContactName(),
+                'contact_email' => $lead->getContactEmail(),
+                'contact_phone' => $lead->getContactPhone(),
+                'status' => $lead->status,
+                'form_responses' => $lead->form_responses ?? [],
+                'estimate_breakdown' => $lead->estimate_breakdown ?? [],
+                'base_price' => $lead->base_price,
+                'subtotal' => $lead->subtotal,
+                'tax_amount' => $lead->tax_amount,
+                'total_price' => $lead->total_price,
+                'formatted_total' => $lead->getFormattedTotal(),
+                'source_url' => $lead->source_url,
+                'ip_address' => $lead->ip_address,
+                'user_agent' => $lead->user_agent,
+                'created_at' => $lead->created_at->format('M j, Y g:i A'),
+                'updated_at' => $lead->updated_at->format('M j, Y g:i A'),
+                'widget' => [
+                    'id' => $lead->widget->id,
+                    'name' => $lead->widget->name,
+                    'widget_key' => $lead->widget->widget_key,
+                    'module_configs' => $lead->widget->module_configs,
+                ],
+            ],
+        ]);
+    })->name('leads.show');
+
+    Route::put('leads/{lead}/status', function (\App\Models\WidgetLead $lead, \Illuminate\Http\Request $request) {
+        $user = auth()->user();
+
+        // Authorization check
+        if (!$user->isSystemAdmin() && $lead->widget->company_id !== $user->company_id) {
+            abort(403);
+        }
+
+        // Validate
+        $validated = $request->validate([
+            'status' => 'required|in:new,contacted,converted,lost',
+        ]);
+
+        // Update status
+        $lead->update(['status' => $validated['status']]);
+
+        return redirect()->back()->with('success', 'Lead status updated successfully');
+    })->name('leads.updateStatus');
+
     Route::get('widgets/create', function () {
         return Inertia::render('widgets/create-advanced');
     })->name('widgets.create');

@@ -197,21 +197,25 @@ php artisan optimize
 
 Railway provides the easiest deployment path with built-in PostgreSQL and automatic builds.
 
-### Step 1: Prerequisites
+### Step 1: Fork and Connect Repository
 
-- [Railway account](https://railway.app)
-- GitHub repository connected to your project
+1. **Fork this repository** to your GitHub account
+2. Create a [Railway account](https://railway.app) if you don't have one
+3. Go to [Railway Dashboard](https://railway.app/dashboard) and click "New Project"
+4. Select **"Deploy from GitHub repo"**
+5. Connect your GitHub account if not already connected
+6. Choose your forked repository from the list
 
-### Step 2: Create Railway Project
+### Step 2: Add PostgreSQL Database
 
-1. Go to [Railway](https://railway.app) and create a new project
-2. Select "Deploy from GitHub repo"
-3. Choose your repository
-4. Add PostgreSQL database service from Railway's catalog
+1. In your Railway project, click **"+ New"**
+2. Select **"Database"**
+3. Choose **"Add PostgreSQL"**
+4. Railway will automatically create database credentials
 
 ### Step 3: Configure Environment Variables
 
-Add the following environment variables in Railway dashboard:
+Click on your application service in Railway, then go to the **Variables** tab and add the following:
 
 ```env
 # Application
@@ -283,17 +287,17 @@ $user = App\Models\User::create([
 ]);
 ```
 
-**Start Queue Worker:**
+**Start Queue Worker (Optional):**
 
 For background jobs (webhooks, emails), add a worker process in Railway:
 
-```bash
-php artisan queue:work --tries=3 --timeout=90
-```
-
-### Alternative: Deploy Button
-
-[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template/your-template)
+1. Click **"+ New"** in your Railway project
+2. Select **"Empty Service"**
+3. Connect the same GitHub repository
+4. In Settings → Deploy, set custom start command:
+   ```bash
+   php artisan queue:work --tries=3 --timeout=90
+   ```
 
 ## Multi-Tenancy Explained
 
@@ -1205,7 +1209,7 @@ For issues, questions, or contributions:
 
 - **Issues**: [GitHub Issues](https://github.com/yourusername/chalk-leads-app/issues)
 - **Documentation**: This README
-- **Email**: support@chalkleads.com
+- **Email**: daniel@umbral.ai
 
 ---
 
